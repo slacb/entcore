@@ -720,7 +720,8 @@ public class DefaultTimelineMailerService extends Renders implements TimelineMai
 		aggregation
 				.put("aggregate", "timeline")
 				.put("allowDiskUse", true)
-				.put("pipeline", pipeline);
+				.put("pipeline", pipeline)
+				.put("cursor", new JsonObject().put("batchSize", Integer.MAX_VALUE));
 
 		JsonObject matcher = MongoQueryBuilder.build(QueryBuilder.start("date").greaterThanEquals(from));
 		JsonObject grouper = new JsonObject("{ \"_id\" : \"notifiedUsers\", \"recipients\" : {\"$addToSet\" : \"$recipients.userId\"}}");
@@ -787,7 +788,8 @@ public class DefaultTimelineMailerService extends Renders implements TimelineMai
 		aggregation
 				.put("aggregate", "timeline")
 				.put("allowDiskUse", true)
-				.put("pipeline", pipeline);
+				.put("pipeline", pipeline)
+				.put("cursor", new JsonObject().put("batchSize", Integer.MAX_VALUE));
 
 		JsonObject matcher = MongoQueryBuilder.build(
 				QueryBuilder

@@ -213,7 +213,8 @@ public class IndicatorMongoImpl extends Indicator{
 		aggregation
 			.put("aggregate", COLLECTIONS.events.name())
 			.put("allowDiskUse", true)
-			.put("pipeline", pipeline);
+			.put("pipeline", pipeline)
+			.put("cursor", new JsonObject().put("batchSize", Integer.MAX_VALUE));
 
 		pipeline.add(new JsonObject().put("$match", MongoQueryBuilder.build(filteringQuery)));
 		addUnwindPipeline(pipeline, group);
