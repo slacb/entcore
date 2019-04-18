@@ -18,17 +18,54 @@
 				<span class="explorer-badge-drop">[[countDragItems()]]</span>
 				<!--LEGEND MUST BE BEFORE container-->
 				<legend class="no-1d">
+					<resource-right name="comment">
+						<a>comment</a>
+					</resource-right>
+					<resource-right name="contrib">
+						<a>contrib</a>
+					</resource-right>
+					<resource-right name="manager">
+						<a>manager</a>
+					</resource-right>
+					<resource-right name="read">
+						<a>read</a>
+					</resource-right>
 					<a>
 						<span class="badge" ng-if="canShowBadgeComments(folder)" tooltip="comments" ng-click="showFolderComments(folder, $event)">[[folder.comments.length]]</span>
 						<span tooltip-on-ellipsis="[[folder.name]]">[[folder.name]]</span>
 					</a>
 					<a class="author" ng-if="canShowOwner()"><strong>[[folder.ownerName]]</strong></a>
+					<resource-right name="comment" resource="document">
+						<a>comment</a>
+					</resource-right>
+					<resource-right name="contrib" resource="document">
+						<a>contrib</a>
+					</resource-right>
+					<resource-right name="manager" resource="document">
+						<a>manager</a>
+					</resource-right>
+					<resource-right name="read" resource="document">
+						<a>read</a>
+					</resource-right>
 				</legend>
 				<a class="container" ng-class="{'highlight-border-3s':isHighlighted(folder)}">
 					<i class="folder-large"></i>
 				</a>
 				<i ng-if="folder.isShared && isSearchResult()" class="shared inline"></i>
+				
 				<legend class="no-2d">
+					<resource-right name="comment" resource="document">
+						<a>comment</a>
+					</resource-right>
+					<resource-right name="contrib" resource="document">
+						<a>contrib</a>
+					</resource-right>
+					<resource-right name="manager" resource="document">
+						<a>manager</a>
+					</resource-right>
+					<resource-right name="read" resource="document">
+						<a>read</a>
+					</resource-right>
 					<a>
 						<span class="badge" ng-if="canShowBadgeComments(folder)" tooltip="comments" ng-click="showFolderComments(folder, $event)">[[folder.comments.length]]</span>
 						<span tooltip-on-ellipsis="[[folder.name]]">[[folder.name]]</span>
@@ -70,6 +107,18 @@
 		<div ng-repeat="document in openedFolder.documents" class="element" ng-class="{ selected: document.selected}" dragend="dragEnd(document, $originalEvent)"  dragstart="drag(document, $originalEvent)" dragcondition="dragCondition(document)">
 			<explorer  class="radius explorer-hover" ng-model="document.selected" ng-change="onSelectItem($event,document)" on-open="viewFile(document)" ng-class="{'short':!isSharedTree()}">
 				<legend class="no-1d">
+					<resource-right name="comment" resource="document">
+						<a>comment</a>
+					</resource-right>
+					<resource-right name="contrib" resource="document">
+						<a>contrib</a>
+					</resource-right>
+					<resource-right name="manager" resource="document">
+						<a>manager</a>
+					</resource-right>
+					<resource-right name="read" resource="document">
+						<a>read</a>
+					</resource-right>
 					<a>
 						<span class="badge" ng-if="canShowBadgeComments(document)" translate  attr="title" title="comments" ng-click="showComments(document, $event)">[[document.comments.length]]</span>
 						<span tooltip-on-ellipsis="[[document.name]]">[[document.name]]</span>
@@ -89,6 +138,18 @@
 
 				<i ng-if="document.isShared && isSearchResult()" class="shared inline"></i>
 				<legend class="no-2d">
+					<resource-right name="comment" resource="document">
+						<a>comment</a>
+					</resource-right>
+					<resource-right name="contrib" resource="document">
+						<a>contrib</a>
+					</resource-right>
+					<resource-right name="manager" resource="document">
+						<a>manager</a>
+					</resource-right>
+					<resource-right name="read" resource="document">
+						<a>read</a>
+					</resource-right>
 					<a>
 						<span class="badge" ng-if="canShowBadgeComments(document)" translate  attr="title" title="comments" ng-click="showComments(document, $event)">[[document.comments.length]]</span>
 						<span tooltip-on-ellipsis="[[document.name]]">[[document.name]]</span>
