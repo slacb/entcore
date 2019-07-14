@@ -536,17 +536,17 @@ public class DefaultCommunicationService implements CommunicationService {
 			query.append("MATCH (n:User)-[:COMMUNIQUE*1..3]->m-[:DEPENDS*1..2]->(s:Structure {id:{schoolId}})"); //TODO manage leaf
 			params.put("schoolId", structureId);
 		} else {
-			String myGroupQuery = (myGroup) ? "COLLECT(g.id)" : "[]";
-			query.append(" MATCH (n:User {id: {userId}})-[:COMMUNIQUE]->(g:Group) ");
-			query.append("WITH (REDUCE(acc=[], groups IN COLLECT(COALESCE(g.communiqueWith, [])) | acc+groups) + ")
-					.append(myGroupQuery).append(") as comGroups ");
-			query.append("MATCH p=(g:Group)<-[:DEPENDS*0..1]-cg-[:COMMUNIQUE*0..1]->m ");
+			String l = (myGroup) ? " (length(p) >= 2 OR m.users <> 'INCOMING')" : " length(p) >= 2";
+			query.append(" MATCH p=(n:User)-[:COMMUNIQUE*0..2]->ipg" +
+					"-[:COMMUNIQUE*0..1]->g<-[:DEPENDS*0..1]-m ");
+			condition += "AND (("+ l +
+					" AND (length(p) < 3 OR (ipg:Group AND (m:User OR g<-[:DEPENDS]-m) AND length(p) = 3)))) ";
 			if (userProfile == null || "Student".equals(userProfile) || "Relative".equals(userProfile)) {
 				union = new StringBuilder("MATCH p=(n:User)-[:COMMUNIQUE_DIRECT]->m " +
 						"WHERE n.id = {userId} AND (NOT(HAS(m.blocked)) OR m.blocked = false) ");
 			}
 		}
-		query.append("WHERE  g.id IN comGroups AND length(p) < 2 AND (NOT(HAS(m.blocked)) OR m.blocked = false) ");
+		query.append("WHERE n.id = {userId} AND (NOT(HAS(m.blocked)) OR m.blocked = false) ");
 		if (preFilter != null) {
 			query.append(preFilter);
 			if (union != null) {
