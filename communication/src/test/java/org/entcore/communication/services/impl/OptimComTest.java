@@ -49,7 +49,7 @@ public class OptimComTest {
 	private static final String USERS_QUERY =
 			"MATCH (u:User) " +
 			"WHERE HAS(u.password) AND NOT(HAS(u.deleteDate)) " +
-			"RETURN u.id as id, HEAD(u.profiles) as profile LIMIT 100";
+			"RETURN u.id as id, HEAD(u.profiles) as profile LIMIT 1000";
 	private static final String CUSTOM_RETURN =
 			"RETURN DISTINCT visibles.id as id, visibles.name as name, " +
 			"visibles.displayName as displayName, visibles.groupDisplayName as groupDisplayName, " +
@@ -76,6 +76,12 @@ public class OptimComTest {
 	}
 
 	@Test
+	public void testWait(TestContext context) {
+		final Async async = context.async();
+		vertx.setTimer(30000L, h -> async.complete());
+	}
+
+	@Test
 	public void testDefaultComRules(TestContext context) {
 		testComRules(context, defaultComService, defaultResults);
 	}
@@ -91,7 +97,7 @@ public class OptimComTest {
 				for (Object o : a) {
 					final String userId = ((JsonObject) o).getString("id");
 					final String userProfile = ((JsonObject) o).getString("profile");
-					futures.add(getComRules(communicationService, userId, userProfile, i));
+					futures.add(getComRules(communicationService, userId, userProfile, i++));
 				}
 				CompositeFuture.all(futures).setHandler(ar -> {
 					if (ar.succeeded()) {
@@ -142,7 +148,7 @@ public class OptimComTest {
 
 	private Future<Void> getComRules(CommunicationService communicationService, String userId, String userProfile, long i) {
 		final Future<Void> future = Future.future();
-		vertx.setTimer(i * 100L, h -> {
+		vertx.setTimer(i * 50L, h -> {
 			final long start = System.currentTimeMillis();
 			communicationService.visibleUsers(userId, null, null, true, true,
 					false, null, CUSTOM_RETURN, new JsonObject(), userProfile, visibles -> {

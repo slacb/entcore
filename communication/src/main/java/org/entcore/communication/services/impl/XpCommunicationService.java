@@ -54,7 +54,9 @@ public class XpCommunicationService extends DefaultCommunicationService {
 						"WHERE n.id = {userId} AND (NOT(HAS(m.blocked)) OR m.blocked = false) ");
 			}
 		}
-		query.append("WHERE  g.id IN comGroups AND length(p) < 2 AND (NOT(HAS(m.blocked)) OR m.blocked = false) ");
+		query.append("WHERE  g.id IN comGroups " +
+				"AND (length(p) < 1 OR (length(p) < 2 AND g.id <> cg.id) OR (length(p) < 2 AND m:User)) " +
+				"AND (NOT(HAS(m.blocked)) OR m.blocked = false) ");
 		if (preFilter != null) {
 			query.append(preFilter);
 			if (union != null) {
