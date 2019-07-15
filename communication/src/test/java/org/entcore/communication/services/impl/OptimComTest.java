@@ -101,7 +101,6 @@ public class OptimComTest {
 				}
 				CompositeFuture.all(futures).setHandler(ar -> {
 					if (ar.succeeded()) {
-						int count = 0;
 						int mean = 0;
 						List<Integer> times = new ArrayList<>();
 						JsonArray res = new JsonArray();
@@ -109,7 +108,6 @@ public class OptimComTest {
 							final int time =  e.getInteger("time");
 							mean += time;
 							times.add(time);
-							count++;
 							List<String> vName = new ArrayList<>();
 							for (Object o : e.getJsonArray("visibles")) {
 								if (isNotEmpty(((JsonObject) o).getString("name"))) {
@@ -125,9 +123,12 @@ public class OptimComTest {
 									.put("visibles", new JsonArray(vName));
 							res.add(el);
 						}
-						mean = mean / count;
+						Collections.sort(times);
+						log.info("Min : " + times.get(0));
+						log.info("Max : " + times.get(times.size() -1));
+						mean = mean / times.size();
 						log.info("Mean : " + mean);
-						log.info("95 pct : " + times.get((int) Math.round(0.95 * count)));
+						log.info("95 pct : " + times.get((int) Math.round(0.95 * times.size())));
 						vertx.fileSystem().writeFile("/tmp/results-" + communicationService
 								.getClass().getSimpleName() + ".json", Buffer.buffer(res.encodePrettily()), arf -> {
 							if (arf.succeeded()) {
