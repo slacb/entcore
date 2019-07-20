@@ -843,5 +843,7 @@
     "group.details.button.comm.rules": "Règles de communication du groupe",
     "create.flash.message": "Créer un message flash",
 
-    "wizard.steps": "Étapes :"
+    "wizard.steps": "Étapes :",
+    "csv.file.too.long" : "Fichier trop volumineux. La taille maximum est d'un méga-octets par fichier.",
+    "csv.file.size.error": "Erreur lors du calcul de la taille du fichier."
 }
