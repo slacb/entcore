@@ -163,7 +163,7 @@
     "relative":"Parent",
     "gender":"Genre",
     "childLastName":"Nom de l'enfant",
-    "childUsername":"Prénom de l'enfant",
+    "childUsername":"Nom d'usage de l'enfant",
     "surname":"Nom de famille",
     "importId":"Identifiant d'import",
     "country":"Pays",
