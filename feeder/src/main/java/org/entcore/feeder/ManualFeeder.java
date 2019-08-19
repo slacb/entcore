@@ -83,7 +83,7 @@ public class ManualFeeder extends BusModBase {
 					"WITH s " +
 					"MATCH (p:Profile) " +
 					"CREATE p<-[:HAS_PROFILE]-(g:Group:ProfileGroup {name : s.name+'-'+p.name, " +
-					"displayNameSearchField: {groupSearchField}, , filter: p.name})-[:DEPENDS]->s " +
+					"displayNameSearchField: {groupSearchField}, filter: p.name})-[:DEPENDS]->s " +
 					"SET g.id = id(g)+'-'+timestamp() " +
 					"RETURN DISTINCT s.id as id ";
 			JsonObject params = new JsonObject()
