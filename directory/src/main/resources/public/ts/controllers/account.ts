@@ -80,11 +80,12 @@ export const accountController = ng.controller('MyAccount', ['$scope', 'route', 
 			if(!$scope.account.themes){
 				$scope.account.themes = {};
 			}
-			
+			console.log("$scope.account", $scope.account);
+
 			$scope.$apply();
 		}
 	}
-	
+
 	const xhr = new XMLHttpRequest();
 	xhr.open('get', '/assets/theme-conf.js');
 	xhr.onload = async () => {
@@ -151,14 +152,27 @@ export const accountController = ng.controller('MyAccount', ['$scope', 'route', 
 		return '';
 	};
 
+	$scope.selectedTheme = null;
+
 	$scope.setThemePreferences = (themeName: string) => {
+		console.log("scope", $scope);
 		const addedThemes = [];
-			
+		console.log(themeName);
+		console.log("SA", $scope.account);
+		/*
 		for(let name in $scope.account.themes){
 			if($scope.account.themes[name]){
 				addedThemes.push(name);
 			}
 		}
+		*/
+		// ToDo : Check if this theme is legal
+		$scope.account.themes = {
+			[themeName]: true
+		}
+
+		/*
+		console.log("addedThemes", addedThemes);
 
 		if(addedThemes.length > 1){
 			const keptTheme = $scope.themes.find(t => t.parent === 'theme-open-ent').child;
@@ -166,7 +180,8 @@ export const accountController = ng.controller('MyAccount', ['$scope', 'route', 
 		}
 		else{
 			http().put('/userbook/preference/theme', addedThemes[0]);
-		}
+		}*/
+		http().put('/userbook/preference/theme', themeName);
 	};
 
 	$scope.translate = function(label){
