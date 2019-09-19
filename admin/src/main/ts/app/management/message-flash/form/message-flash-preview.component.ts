@@ -7,8 +7,8 @@ import { MessageFlashService } from '../message-flash.service';
 
     <link rel="stylesheet" #myTheme type="text/css" media="screen" />
 
-
-    <article class="content-box" style="flex: 1 1; margin: 10px; padding: 10px; height: 98%;">
+    <article class="content-box" style="flex: 1 1; margin: 10px; padding: 10px; height: 90%;">
+        
         <div class="twelve cell">
             <div *ngIf="customColor != undefined"  class="flashmsg" [ngStyle]="{'background-color': customColor}">
                 <i class="close-2x right-magnet"></i>

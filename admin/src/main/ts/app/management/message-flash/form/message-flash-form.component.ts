@@ -85,17 +85,24 @@ import 'trumbowyg/plugins/history/trumbowyg.history.js'
                         <s5l>management.message.flash.lightbox.warning.notification</s5l>
                     </div>
                 </fieldset>
+                
 
                 <div class="has-top-margin-40" style="width: 100%; display : flex">
-                    <div style="flex: 1 1; margin: 10px;">
-                        <textarea id="trumbowyg-editor">{{ message.contents[selectedLanguage] }}</textarea>
+                    <div>
+                        <p class="has-left-margin-5 is-bold"><s5l>management.message.flash.message</s5l></p>
+        
+                        <div style="flex: 1 1; margin: 10px;">
+                            <textarea id="trumbowyg-editor">{{ message.contents[selectedLanguage] }}</textarea>
+                        </div>
                     </div>
-                    <message-flash-preview
-                        [text]="sanitized.bypassSecurityTrustHtml(message.contents[selectedLanguage])"
-                        [color]="message.color"
-                        [customColor]="message.customColor"
-                        style="width:50%;">
-                    </message-flash-preview>
+                    <div>
+                        <p class="has-left-margin-5 is-bold"><s5l>management.message.flash.preview</s5l></p>
+                        <message-flash-preview
+                            [text]="sanitized.bypassSecurityTrustHtml(message.contents[selectedLanguage])"
+                            [color]="message.color"
+                            [customColor]="message.customColor">
+                        </message-flash-preview>
+                    </div>
                 </div>
 
                 <div class="has-top-margin-40">
