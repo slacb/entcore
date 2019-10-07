@@ -448,7 +448,7 @@ public class AuthController extends BaseController {
 	}
 
 	private void createSession(String userId, final HttpServerRequest request, final String callBack) {
-		UserUtils.createSession(eb, userId, "true".equals(request.formAttributes().get("secureLocation")),
+		UserUtils.createSession(request, eb, userId, "true".equals(request.formAttributes().get("secureLocation")),
 				sessionId -> {
 					if (sessionId != null && !sessionId.trim().isEmpty()) {
 						boolean rememberMe = "true".equals(request.formAttributes().get("rememberMe"));
@@ -516,7 +516,7 @@ public class AuthController extends BaseController {
 		}
 
 		if (sessionId != null && !sessionId.trim().isEmpty()) {
-			UserUtils.deleteSession(eb, sessionId, new io.vertx.core.Handler<Boolean>() {
+			UserUtils.deleteSession(request, eb, sessionId, new io.vertx.core.Handler<Boolean>() {
 
 				@Override
 				public void handle(Boolean deleted) {

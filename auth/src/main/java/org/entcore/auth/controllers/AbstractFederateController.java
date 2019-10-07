@@ -70,7 +70,7 @@ public abstract class AbstractFederateController extends BaseController {
 	}
 
 	protected void createSession(String userId, String sessionIndex, String nameId, final HttpServerRequest request) {
-		UserUtils.createSession(eb, userId, sessionIndex, nameId,
+		UserUtils.createSession(request, eb, userId, sessionIndex, nameId,
 				new io.vertx.core.Handler<String>() {
 
 			@Override

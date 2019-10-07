@@ -21,6 +21,7 @@ package org.entcore.common.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.data.ZLib;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.CookieHelper;
 import fr.wseduc.webutils.security.JWT;
@@ -31,6 +32,10 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.utils.StringUtils;
+import org.vertx.java.busmods.BusModBase;
 
 import java.io.IOException;
 import java.util.*;
@@ -40,7 +45,7 @@ import static fr.wseduc.webutils.Utils.getOrElse;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class UserUtils {
-
+	private static final int MAX_COOKIE_SESSION = 4;
 	private static final String COMMUNICATION_USERS = "wse.communication.users";
 	private static final String DIRECTORY = "directory";
 	private static final String SESSION_ADDRESS = "wse.session";
@@ -51,6 +56,7 @@ public class UserUtils {
 	.put("action", "visibleManualGroups");
 	private static final I18n i18n = I18n.getInstance();
 	private static final long JWT_TOKEN_EXPIRATION_TIME = 600L;
+	protected static final Logger logger = LoggerFactory.getLogger(BusModBase.class);
 
 	private static void findUsers(final EventBus eb, HttpServerRequest request,
 								  final JsonObject query, final Handler<JsonArray> handler) {
@@ -367,11 +373,27 @@ public class UserUtils {
 	}
 
 	public static void getSession(EventBus eb, final HttpServerRequest request, boolean paused,
-								  final Handler<JsonObject> handler) {
+								  final Handler<JsonObject> originalHandler) {
+		Handler<JsonObject> handler = (session)->{
+			createSessionCookie(request, session);
+			originalHandler.handle(session);
+		};
+		//look in session request
 		if (request instanceof SecureHttpServerRequest &&
 				((SecureHttpServerRequest) request).getSession() != null) {
-			handler.handle(((SecureHttpServerRequest) request).getSession());
+			originalHandler.handle(((SecureHttpServerRequest) request).getSession());
 		} else {
+			//look in cache
+			JsonObject sessionCached = getSessionCookie(request);
+			if(sessionCached != null){
+				//logger.info("Reusing session from cache...");
+				if (request instanceof SecureHttpServerRequest) {
+					((SecureHttpServerRequest) request).setSession(sessionCached);
+				}
+				originalHandler.handle(sessionCached);
+				return;
+			}
+			//
 			String oneSessionId = CookieHelper.getInstance().getSigned("oneSessionId", request);
 			String remoteUserId = null;
 			if (request instanceof SecureHttpServerRequest) {
@@ -463,20 +485,93 @@ public class UserUtils {
 		getSession(eb, request, new Handler<JsonObject>() {
 			@Override
 			public void handle(JsonObject session) {
-				handler.handle(sessionToUserInfos(session));
+				UserInfos infos = sessionToUserInfos(session);
+				handler.handle(infos);
 			}
 		});
 	}
 
-	public static void createSession(EventBus eb, String userId, boolean secureLocation, Handler<String> handler) {
-		createSession(eb, userId, null, null, secureLocation, handler);
+	private static JsonObject getSessionCookie(HttpServerRequest request){
+		try {
+			String jsonCompressedB64 = joinSessionCookie(request);
+			if(jsonCompressedB64 != null && jsonCompressedB64.length()>0){
+				//logger.info("Trying to get session from cache...");
+				byte[] jsonCompressed = Base64.getDecoder().decode(jsonCompressedB64.getBytes());
+				byte[] json = ZLib.decompress(jsonCompressed);
+				JsonObject jsonObject = new JsonObject(new String(json));
+				//dont return empty json
+				if(jsonObject.size() > 0) return jsonObject;
+			}
+		} catch (Exception e) {
+			logger.error("Failed to read session cookie: ",e);
+		}
+		return null;
 	}
 
-	public static void createSession(EventBus eb, String userId, String sessionIndex, String nameId, Handler<String> handler) {
-		createSession(eb, userId, sessionIndex, nameId, false, handler);
+	private static String joinSessionCookie(HttpServerRequest request){
+		CookieHelper instance = CookieHelper.getInstance();
+		String all = "";
+		for(int i = 0 ; i < MAX_COOKIE_SESSION; i++){
+			String value = instance.getSigned("usersessionjson"+i, request);
+			if(!StringUtils.isEmpty(value)){
+				all += value;
+			}
+		}
+		return all;
 	}
 
-	public static void createSession(EventBus eb, String userId, String sessionIndex, String nameId,
+	private static List<String> splitSessionCookie(String cookie){
+		List<String> cookies = new ArrayList<>();
+		final int MAX_SIZE = 4000;
+		int start = 0;
+		for(int i = 0; i < MAX_COOKIE_SESSION; i ++){
+			int end = Math.min((start + MAX_SIZE),cookie.length());
+			cookies.add(cookie.substring(start,end));
+			start = end;
+		}
+		if(start < cookie.length())	cookies.clear();
+		return cookies;
+	}
+
+	private static void createSessionCookie(HttpServerRequest request, JsonObject session) {
+		try{
+			if(session!=null) {
+				String json = session.encode();
+				byte[] jsonCompressed = ZLib.compress(json.getBytes());
+				String jsonCompressedB64 = Base64.getEncoder().encodeToString(jsonCompressed);
+				List<String> splittedCookies = splitSessionCookie(jsonCompressedB64);
+				for(int i = 0; i < MAX_COOKIE_SESSION; i++){
+					if(i < splittedCookies.size()){
+						CookieHelper.getInstance().setSigned("usersessionjson"+i, splittedCookies.get(i), -9223372036854775808L, request);
+					}else{
+						CookieHelper.getInstance().setSigned("usersessionjson"+i, "", 0, request);
+					}
+				}
+				//logger.info("Add session to cache... len="+jsonCompressedB64.length());
+			}else{
+				removeSessionCookie(request);
+			}
+		}catch(Exception e){
+			logger.error("Failed to create session cookie: ",e);
+		}
+	}
+
+	private static void removeSessionCookie(HttpServerRequest request){
+		for(int i = 0 ; i < MAX_COOKIE_SESSION; i++) {
+			CookieHelper.getInstance().setSigned("usersessionjson"+i, "", 0, request);
+		}
+		//logger.info("Remove session from cache...");
+	}
+
+	public static void createSession(HttpServerRequest request, EventBus eb, String userId, boolean secureLocation, Handler<String> handler) {
+		createSession(request, eb, userId, null, null, secureLocation, handler);
+	}
+
+	public static void createSession(HttpServerRequest request,EventBus eb, String userId, String sessionIndex, String nameId, Handler<String> handler) {
+		createSession(request , eb, userId, sessionIndex, nameId, false, handler);
+	}
+
+	public static void createSession(HttpServerRequest request, EventBus eb, String userId, String sessionIndex, String nameId,
 			boolean secureLocation, final Handler<String> handler) {
 		JsonObject json = new JsonObject()
 				.put("action", "create")
@@ -493,7 +588,10 @@ public class UserUtils {
 			public void handle(AsyncResult<Message<JsonObject>> res) {
 				if (handler != null) {
 					if (res.succeeded() && "ok".equals(res.result().body().getString("status"))) {
-						handler.handle(res.result().body().getString("sessionId"));
+						//create session cookie
+						UserUtils.getUserInfos(eb,request, resU->{
+							handler.handle(res.result().body().getString("sessionId"));
+						});
 					} else {
 						handler.handle(null);
 					}
@@ -502,7 +600,7 @@ public class UserUtils {
 		});
 	}
 
-	public static void deleteSession(EventBus eb, String sessionId,
+	public static void deleteSession(HttpServerRequest request, EventBus eb, String sessionId,
 									 final Handler<Boolean> handler) {
 		JsonObject json = new JsonObject()
 				.put("action", "drop")
@@ -512,6 +610,7 @@ public class UserUtils {
 			@Override
 			public void handle(AsyncResult<Message<JsonObject>> res) {
 				if (handler != null) {
+					UserUtils.removeSessionCookie(request);
 					handler.handle(res.succeeded() && "ok".equals(res.result().body().getString("status")));
 				}
 			}
