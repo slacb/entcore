@@ -314,6 +314,12 @@ project(':session') {
   }
 }
 
+project(':sessioncache') {
+  dependencies {
+    compile project(':common')
+  }
+}
+
 
 project(':tests') {
   apply plugin: 'scala'

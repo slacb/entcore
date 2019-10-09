@@ -82,10 +82,10 @@ public class AuthManager extends BusModBase implements Handler<Message<JsonObjec
 			}
 			logger.info("Initialize session cluster maps.");
 		} else {
-			sessions = new HashMap<>();
+			sessions = vertx.sharedData().getLocalMap("sessions");
 			logins = new HashMap<>();
 			if (getOrElse(config.getBoolean("inactivity"), false)) {
-				inactivity = new HashMap<>();
+				inactivity = vertx.sharedData().getLocalMap("inactivity");
 			}
 			logger.info("Initialize session hash maps.");
 		}

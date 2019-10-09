@@ -47,6 +47,7 @@ public class UserUtils {
 	private static final String COMMUNICATION_USERS = "wse.communication.users";
 	private static final String DIRECTORY = "directory";
 	private static final String SESSION_ADDRESS = "wse.session";
+	private static final String SESSION_CACHE_ADDRESS = "session.cache";
 	private static final JsonArray usersTypes = new fr.wseduc.webutils.collections.JsonArray().add("User");
 	private static final JsonObject QUERY_VISIBLE_PROFILS_GROUPS = new JsonObject()
 			.put("action", "visibleProfilsGroups");
@@ -407,25 +408,38 @@ public class UserUtils {
 		findSession(eb, request, findSession, false, handler);
 	}
 
-	private static void findSession(EventBus eb, final HttpServerRequest request, JsonObject findSession, final boolean paused,
-			final Handler<JsonObject> handler) {
-		eb.send(SESSION_ADDRESS, findSession, new Handler<AsyncResult<Message<JsonObject>>>() {
+	private static void findSession(EventBus eb, final HttpServerRequest request, JsonObject findSession,
+			final boolean paused, final Handler<JsonObject> handler) {
+		if (findSession != null && "find".equals(findSession.getString("action"))) {
+			findSession(eb, request, findSession, paused, SESSION_CACHE_ADDRESS, handler);
+		} else {
+			findSession(eb, request, findSession, paused, SESSION_ADDRESS, handler);
+		}
+	}
 
-			@Override
-			public void handle(AsyncResult<Message<JsonObject>> message) {
-				if (message.succeeded()) {
-					JsonObject session = message.result().body().getJsonObject("session");
-					if (request != null && !paused) {
-						request.resume();
+	private static void findSession(EventBus eb, final HttpServerRequest request, JsonObject findSession,
+			final boolean paused, final String address, final Handler<JsonObject> handler) {
+		eb.send(address, findSession, (Handler<AsyncResult<Message<JsonObject>>>) message -> {
+			if (message.succeeded()) {
+				JsonObject session = message.result().body().getJsonObject("session");
+				if (request != null && !paused) {
+					request.resume();
+				}
+				if ("ok".equals(message.result().body().getString("status")) && session != null) {
+					if (request instanceof SecureHttpServerRequest) {
+						((SecureHttpServerRequest) request).setSession(session);
 					}
-					if ("ok".equals(message.result().body().getString("status")) && session != null) {
-						if (request instanceof SecureHttpServerRequest) {
-							((SecureHttpServerRequest) request).setSession(session);
-						}
-						handler.handle(session);
+					handler.handle(session);
+				} else {
+					if (SESSION_CACHE_ADDRESS.equals(address)) {
+						findSession(eb, request, findSession, paused, SESSION_ADDRESS, handler);
 					} else {
 						handler.handle(null);
 					}
+				}
+			} else {
+				if (SESSION_CACHE_ADDRESS.equals(address)) {
+					findSession(eb, request, findSession, paused, SESSION_ADDRESS, handler);
 				} else {
 					handler.handle(null);
 				}

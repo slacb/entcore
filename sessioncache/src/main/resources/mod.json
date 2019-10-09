@@ -1,0 +1,7 @@
+{
+	"main" : "org.entcore.sessioncache.SessionCache",
+	"worker": true,
+	"preserve-cwd" : true,
+	"slo" : true,
+	"address" : "session.cache"
+}
