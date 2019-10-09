@@ -31,6 +31,8 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -55,6 +57,7 @@ public class UserUtils {
 	.put("action", "visibleManualGroups");
 	private static final I18n i18n = I18n.getInstance();
 	private static final long JWT_TOKEN_EXPIRATION_TIME = 600L;
+	private static Logger log = LoggerFactory.getLogger(UserUtils.class);
 
 	private static void findUsers(final EventBus eb, HttpServerRequest request,
 								  final JsonObject query, final Handler<JsonArray> handler) {
@@ -417,8 +420,9 @@ public class UserUtils {
 		}
 	}
 
-	private static void findSession(EventBus eb, final HttpServerRequest request, JsonObject findSession,
+	private static void findSession(final EventBus eb, final HttpServerRequest request, final JsonObject findSession,
 			final boolean paused, final String address, final Handler<JsonObject> handler) {
+		final long start = System.currentTimeMillis();
 		eb.send(address, findSession, (Handler<AsyncResult<Message<JsonObject>>>) message -> {
 			if (message.succeeded()) {
 				JsonObject session = message.result().body().getJsonObject("session");
@@ -428,6 +432,10 @@ public class UserUtils {
 				if ("ok".equals(message.result().body().getString("status")) && session != null) {
 					if (request instanceof SecureHttpServerRequest) {
 						((SecureHttpServerRequest) request).setSession(session);
+					}
+					long duration = System.currentTimeMillis() - start;
+					if (duration > 100) {
+						log.info("get session from worker " + address + " : " + duration);
 					}
 					handler.handle(session);
 				} else {
