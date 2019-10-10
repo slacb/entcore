@@ -102,6 +102,11 @@ public class JsonHttpServerRequest implements HttpServerRequest {
 	}
 
 	@Override
+	public long bytesRead() {
+		return 0;
+	}
+
+	@Override
 	public HttpServerResponse response() {
 		return response;
 	}
@@ -226,12 +231,22 @@ public class JsonHttpServerRequest implements HttpServerRequest {
 	}
 
 	@Override
+	public HttpServerRequest streamPriorityHandler(Handler<StreamPriority> handler) {
+		return null;
+	}
+
+	@Override
 	public HttpServerRequest pause() {
 		return null;
 	}
 
 	@Override
 	public HttpServerRequest resume() {
+		return null;
+	}
+
+	@Override
+	public HttpServerRequest fetch(long amount) {
 		return null;
 	}
 

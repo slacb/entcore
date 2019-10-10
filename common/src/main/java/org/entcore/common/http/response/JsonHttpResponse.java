@@ -146,12 +146,27 @@ public class JsonHttpResponse implements HttpServerResponse {
 	}
 
 	@Override
+	public HttpServerResponse write(Buffer data, Handler<AsyncResult<Void>> handler) {
+		return null;
+	}
+
+	@Override
 	public HttpServerResponse write(String s, String s2) {
 		return null;
 	}
 
 	@Override
+	public HttpServerResponse write(String chunk, String enc, Handler<AsyncResult<Void>> handler) {
+		return null;
+	}
+
+	@Override
 	public HttpServerResponse write(String s) {
+		return null;
+	}
+
+	@Override
+	public HttpServerResponse write(String chunk, Handler<AsyncResult<Void>> handler) {
 		return null;
 	}
 
@@ -166,8 +181,18 @@ public class JsonHttpResponse implements HttpServerResponse {
 	}
 
 	@Override
+	public void end(String chunk, Handler<AsyncResult<Void>> handler) {
+
+	}
+
+	@Override
 	public void end(String s, String s2) {
 		endHandler.handle(s);
+	}
+
+	@Override
+	public void end(String chunk, String enc, Handler<AsyncResult<Void>> handler) {
+
 	}
 
 	@Override
@@ -176,8 +201,18 @@ public class JsonHttpResponse implements HttpServerResponse {
 	}
 
 	@Override
+	public void end(Buffer chunk, Handler<AsyncResult<Void>> handler) {
+
+	}
+
+	@Override
 	public void end() {
 		endHandler.handle(null);
+	}
+
+	@Override
+	public void end(Handler<AsyncResult<Void>> handler) {
+
 	}
 
 	@Override
