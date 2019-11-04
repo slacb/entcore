@@ -1,0 +1,14 @@
+{
+    "/crm/api/*": {
+      "target": "http://localhost:8090",
+      "secure": false,
+      "logLevel": "debug",
+      "changeOrigin": true
+    },
+    "/**/i18n": {
+      "target": "http://localhost:8090",
+      "secure": false,
+      "logLevel": "debug",
+      "changeOrigin": true
+    }
+  }

@@ -1,0 +1,83 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "entcore-frontend": {
+      "root": "admin/src/main",
+      "sourceRoot": "admin/src/main/ts",
+      "projectType": "application",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "admin/src/main/js",
+            "index": "admin/src/main/ts/index.html",
+            "main": "admin/src/main/ts/main.ts",
+            "tsConfig": "admin/src/main/ts/tsconfig.json",
+            "polyfills": "admin/src/main/ts/libs/polyfills.ts",
+            "assets": [],
+            "styles": [
+              "admin/src/main/resources/public/styles/admin.scss",
+              "node_modules/flatpickr/dist/themes/confetti.css",
+              "node_modules/trumbowyg/dist/ui/trumbowyg.css",
+              "node_modules/trumbowyg/dist/plugins/colors/ui/trumbowyg.colors.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "entcore-frontend:build"
+          },
+          "configurations": {}
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "entcore-frontend:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "admin/src/main/ts/test.ts",
+            "karmaConfig": "./karma.conf.js",
+            "polyfills": "admin/src/main/ts/libs/polyfills.ts",
+            "tsConfig": "admin/src/main/ts/tsconfig.spec.json",
+            "scripts": [],
+            "styles": [],
+            "assets": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [],
+            "exclude": []
+          }
+        }
+      }
+    },
+    "entcore-frontend-e2e": {
+      "root": "admin/src/main/e2e",
+      "sourceRoot": "admin/src/main/e2e",
+      "projectType": "application"
+    }
+  },
+  "defaultProject": "entcore-frontend"
+}
