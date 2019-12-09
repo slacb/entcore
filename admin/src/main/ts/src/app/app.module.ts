@@ -8,6 +8,7 @@ import {AppComponent} from './app.component';
 import {AppHomeComponent} from './app-home.component';
 import {HttpClientModule} from '@angular/common/http';
 import { COMPONENT_LIFECYCLE_DEBUG_MODE } from 'ngx-ode-core';
+import { HttpClient} from '@angular/common/http';
 
 import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de';
@@ -16,6 +17,7 @@ import localeFr from '@angular/common/locales/fr';
 import localeIt from '@angular/common/locales/it';
 import localePt from '@angular/common/locales/pt';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { OdeHttpClient } from './core/ode/OdeHttpClient';
 
 registerLocaleData(localeDe);
 registerLocaleData(localeEs);
@@ -38,7 +40,11 @@ registerLocaleData(localePt);
     ],
     bootstrap: [AppComponent],
     providers: [
-        { provide: COMPONENT_LIFECYCLE_DEBUG_MODE, useValue: 1 }
+        { provide: COMPONENT_LIFECYCLE_DEBUG_MODE, useValue: 1 },
+        {
+            provide: HttpClient,
+            useClass: OdeHttpClient
+        }
     ]
 })
 export class AppModule {

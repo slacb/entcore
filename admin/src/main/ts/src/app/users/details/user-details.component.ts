@@ -11,6 +11,11 @@ import { UserDetailsModel } from '../../core/store/models/userdetails.model';
 import { Config } from '../../core/resolvers/Config';
 import { globalStore } from '../../core/store/global.store';
 import { UsersStore } from '../users.store';
+import { UserDetailsService } from './../../api/user-details.service';
+import { tap, catchError } from 'rxjs/operators';
+import { UserService } from './../../api/user.service';
+import { Subscription, throwError } from 'rxjs';
+
 
 
 @Component({
@@ -57,8 +62,10 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
     constructor(
         injector: Injector,
         public spinner: SpinnerService,
+        private userDetailsService: UserDetailsService,
         private ns: NotifyService,
         private usersStore: UsersStore,
+        private userService: UserService,
         private userListService: UserListService
     ) {
         super(injector);
@@ -120,7 +127,6 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
         return (timestamp + this.config[profile.toLowerCase() + '-pre-delete-delay']) - (new Date()).getTime();
     }
 
-   
     isContextAdml() {
         if (this.details && this.details.functions && this.details.functions.length > 0) {
             const admlIndex = this.details.functions.findIndex((f) => f[0] === 'ADMIN_LOCAL');
@@ -144,8 +150,9 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
     }
 
     toggleUserBlock() {
-        this.spinner.perform('portal-content', this.details.toggleBlock())
-            .then(() => {
+        this.spinner.perform('portal-content', this.userDetailsService.toggleBlock(this.details)
+        .pipe(
+            tap(() => {
                 this.user.blocked = !this.user.blocked;
                 this.updateBlockedInStructures();
                 this.userListService.$updateSubject.next();
@@ -165,23 +172,26 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
                             blocked: this.user.blocked
                         }
                     });
-            }).catch(err => {
-            this.ns.error(
-                {
-                    key: 'notify.user.toggleblock.error.content',
-                    parameters: {
-                        user: this.details.firstName + ' ' + this.user.lastName,
-                        blocked: !this.user.blocked
-                    }
-                },
-                {
-                    key: 'notify.user.toggleblock.error.title',
-                    parameters: {
-                        blocked: !this.user.blocked
-                    }
-                },
-                err);
-        });
+            }),
+            catchError(err => {
+                this.ns.error(
+                    {
+                        key: 'notify.user.toggleblock.error.content',
+                        parameters: {
+                            user: this.details.firstName + ' ' + this.user.lastName,
+                            blocked: !this.user.blocked
+                        }
+                    },
+                    {
+                        key: 'notify.user.toggleblock.error.title',
+                        parameters: {
+                            blocked: !this.user.blocked
+                        }
+                    },
+                    err);
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     isUnblocked() {
@@ -203,9 +213,10 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
             user: `${this.details.firstName} ${this.details.lastName}`,
             numberOfDays: this.millisecondToDays(this.config['delete-user-delay'])
         };
-
-        this.spinner.perform('portal-content', this.user.delete(null, {params: {userId: this.user.id}}))
-            .then(() => {
+        
+        this.spinner.perform('portal-content', this.userService.delete(this.user)
+        .pipe(
+            tap(() => {
                 this.user.deleteDate = Date.now();
                 this.user.duplicates = [];
                 this.updateDeletedInStructures();
@@ -227,8 +238,8 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
                         {key: 'notify.user.delete.title', parameters}
                     );
                 }
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 if (this.isActive()) {
                     this.ns.error(
                         {key: 'notify.user.predelete.error.content', parameters},
@@ -240,12 +251,16 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
                         {key: 'notify.user.delete.error.title', parameters},
                         err);
                 }
-            });
+                return throwError(err);
+
+            })
+        ).toPromise());
     }
 
     restoreUser() {
-        this.spinner.perform('portal-content', this.user.restore())
-            .then(() => {
+        this.spinner.perform('portal-content', this.userService.restore(this.user)
+        .pipe(
+            tap(() => {
                 this.user.deleteDate = null;
                 this.updateDeletedInStructures();
                 this.userListService.$updateSubject.next();
@@ -264,8 +279,8 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
                             user: this.details.firstName + ' ' + this.details.lastName
                         }
                     });
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error(
                     {
                         key: 'notify.user.restore.error.content',
@@ -280,11 +295,13 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
                         }
                     },
                     err);
-            });
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     deleteImg() {
-        this.details.deletePhoto().then(() => {
+        this.userDetailsService.deletePhoto(this.details).subscribe(() => {
             this.ns.success(
                 {
                     key: 'notify.user.remove.photo.content',
@@ -298,7 +315,7 @@ export class UserDetailsComponent extends OdeComponent implements OnInit, OnDest
                         user: this.details.firstName + ' ' + this.details.lastName
                     }
                 });
-        }).catch(() => {
+        }, err => {
             this.ns.error(
                 {
                     key: 'notify.user.remove.photo.error.content',

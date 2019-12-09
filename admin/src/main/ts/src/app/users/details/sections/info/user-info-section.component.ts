@@ -1,7 +1,9 @@
+import { tap, catchError } from 'rxjs/operators';
+import { UserDetailsService } from './../../../../api/user-details.service';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, ViewChild} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {AbstractControl, NgForm} from '@angular/forms';
-import {Observable, Subscription} from 'rxjs';
+import { Observable, Subscription, throwError } from 'rxjs';
 import {BundlesService} from 'ngx-ode-sijil';
 
 import {AbstractSection} from '../abstract.section';
@@ -50,6 +52,7 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
     constructor(
         private http: HttpClient,
         private bundles: BundlesService,
+        public userDetailsService: UserDetailsService,
         private ns: NotifyService,
         public spinner: SpinnerService,
         private cdRef: ChangeDetectorRef,
@@ -78,41 +81,51 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
     }
 
     addAdml() {
-        this.spinner.perform('portal-content', this.details.addAdml(this.structure.id))
-            .then(() => {
+        this.spinner.perform('portal-content', this.userDetailsService.addAdml(this.details, this.structure.id)
+        .pipe(
+            tap(() => {
                 this.ns.success({
                     key: 'notify.user.add.adml.content',
                     parameters: {user: this.user.firstName + ' ' + this.user.lastName}
                 }, 'notify.user.add.adml.title');
                 this.cdRef.markForCheck();
-            }).catch(err => {
-            this.ns.error({
-                key: 'notify.user.add.adml.error.content',
-                parameters: {user: this.user.firstName + ' ' + this.user.lastName}
-            }, 'notify.user.add.adml.error.title', err);
-        });
+            }),
+            catchError(err => {
+                this.ns.error({
+                    key: 'notify.user.add.adml.error.content',
+                    parameters: {user: this.user.firstName + ' ' + this.user.lastName}
+                }, 'notify.user.add.adml.error.title', err);
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     removeAdml() {
         this.showConfirmation = false;
-        this.spinner.perform('portal-content', this.details.removeAdml())
-            .then(() => {
+        this.spinner.perform('portal-content', this.userDetailsService.removeAdml(this.details)
+        .pipe(
+            tap(() => {
                 this.ns.success({
                     key: 'notify.user.remove.adml.content',
                     parameters: {user: this.user.firstName + ' ' + this.user.lastName}
                 }, 'notify.user.remove.adml.title');
                 this.cdRef.markForCheck();
-            }).catch(err => {
-            this.ns.error({
-                key: 'notify.user.remove.adml.error.content',
-                parameters: {user: this.user.firstName + ' ' + this.user.lastName}
-            }, 'notify.user.remove.adml.error.title', err);
-        });
+            }),
+            catchError(err => {
+                this.ns.error({
+                    key: 'notify.user.remove.adml.error.content',
+                    parameters: {user: this.user.firstName + ' ' + this.user.lastName}
+                }, 'notify.user.remove.adml.error.title', err);
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     sendResetPasswordMail(email: string) {
-        this.spinner.perform('portal-content', this.details.sendResetPassword({type: 'email', value: email}))
-            .then(() => {
+
+        this.spinner.perform('portal-content', this.userDetailsService.sendResetPassword(this.details, {type: 'email', value: email})
+        .pipe(
+            tap(() => {
                 this.ns.success({
                     key: 'notify.user.sendResetPassword.email.content',
                     parameters: {
@@ -120,8 +133,8 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
                         mail: email
                     }
                 }, 'notify.user.sendResetPassword.email.title');
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error({
                     key: 'notify.user.sendResetPassword.email.error.content',
                     parameters: {
@@ -129,20 +142,24 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
                         mail: email
                     }
                 }, 'notify.user.sendResetPassword.email.error.title', err);
-            });
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     sendResetPasswordMobile(mobile: string) {
-        this.spinner.perform('portal-content', this.details.sendResetPassword({type: 'mobile', value: mobile}))
-            .then(() => {
+        
+        this.spinner.perform('portal-content', this.userDetailsService.sendResetPassword(this.details, {type: 'mobile', value: mobile})
+        .pipe(
+            tap(() => {
                 this.ns.success({
                     key: 'notify.user.sendResetPassword.mobile.content',
                     parameters: {
                         user: this.user.firstName + ' ' + this.user.lastName,
                     }
                 }, 'notify.user.sendResetPassword.mobile.title');
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error({
                     key: 'notify.user.sendResetPassword.mobile.error.content',
                     parameters: {
@@ -150,15 +167,19 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
                         mobile
                     }
                 }, 'notify.user.sendResetPassword.mobile.error.title', err);
-            });
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     sendIndividualMassMail(type: string) {
         this.showMassMailConfirmation = false;
-        this.spinner.perform('portal-content', this.details.sendIndividualMassMail(type))
-            .then(res => {
+        
+        this.spinner.perform('portal-content', this.userDetailsService.sendIndividualMassMail(this.details, type)
+        .pipe(
+            tap((res: any) => {
                 let infoKey;
-                if (type != 'mail') {
+                if (type !== 'mail') {
                     this.ajaxDownload(res.data, this.user.firstName + '_' + this.user.lastName + '.pdf');
                     infoKey = 'massmail.pdf.done';
                 } else {
@@ -169,13 +190,15 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
                     key: infoKey,
                     parameters: {}
                 }, 'massmail');
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error({
                     key: 'massmail.error',
                     parameters: {}
                 }, 'massmail', err);
-            });
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     private createDownloadAnchor() {
@@ -205,7 +228,7 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
     }
 
     generateMergeKey() {
-        this.spinner.perform('portal-content', this.details.generateMergeKey());
+        this.spinner.perform('portal-content', this.userDetailsService.generateMergeKey(this.details).toPromise());
     }
 
     displayAdmlStructureNames(structureIds: string[]): string {
@@ -229,8 +252,10 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
     }
 
     updateLoginAlias() {
-        this.spinner.perform('portal-content', this.details.updateLoginAlias()
-            .then(res => {
+        
+        this.spinner.perform('portal-content', this.userDetailsService.updateLoginAlias(this.details)
+        .pipe(
+            tap(() => {
                 this.ns.success({
                     key: 'notify.user.updateLoginAlias.content',
                     parameters: {
@@ -238,8 +263,8 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
                     }
                 }, 'notify.user.updateLoginAlias.title');
                 this.infoForm.reset(this.details);
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 if (err
                     && err.response
                     && err.response.data
@@ -261,7 +286,9 @@ export class UserInfoSectionComponent extends AbstractSection implements OnInit 
                 }
                 this.details.loginAlias = '';
                 this.loginAliasInput.setErrors({incorrect: true});
+                return throwError(err);
             })
+        ).toPromise()
         );
     }
 

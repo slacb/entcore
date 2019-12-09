@@ -1,9 +1,13 @@
+import { UserDetailsService } from './../../../../api/user-details.service';
+import { catchError, tap } from 'rxjs/operators';
+import { UserService } from './../../../../api/user.service';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, OnInit} from '@angular/core';
 
 import {AbstractSection} from '../abstract.section';
 import { SpinnerService } from 'ngx-ode-ui';
 import { NotifyService } from 'src/app/core/services/notify.service';
 import { Classe } from 'src/app/core/store/models/user.model';
+import { Observable, throwError } from 'rxjs';
 
 @Component({
     selector: 'ode-user-classes-section',
@@ -20,6 +24,8 @@ export class UserClassesSectionComponent extends AbstractSection implements OnIn
     constructor(
         public spinner: SpinnerService,
         private ns: NotifyService,
+        public userDetailsService: UserDetailsService,
+        private userService: UserService,
         private cdRef: ChangeDetectorRef) {
         super();
     }
@@ -64,38 +70,48 @@ export class UserClassesSectionComponent extends AbstractSection implements OnIn
      * Ajout du droit de professeur principal
      */
     addHeadTeacherManual(structureId: string, externalId: string, classe: any) {
-        this.spinner.perform('portal-content', this.details.addHeadTeacherManual(structureId, externalId, classe))
-            .then(() => {
+        
+        this.spinner.perform('portal-content', this.userDetailsService.addHeadTeacherManual(this.details, structureId, externalId, classe)
+        .pipe(
+            tap(() => {
                 this.ns.success({
                     key: 'notify.user.add.head.teacher.content',
                     parameters: {user: this.user.firstName + ' ' + this.user.lastName}
                 }, 'notify.user.add.head.teacher.title');
                 this.cdRef.markForCheck();
-            }).catch(err => {
-            this.ns.error({
-                key: 'notify.user.add.head.teacher.error.content',
-                parameters: {user: this.user.firstName + ' ' + this.user.lastName}
-            }, 'notify.user.add.head.teacher.error.title', err);
-        });
+            }),
+            catchError(err => {
+                this.ns.error({
+                    key: 'notify.user.add.head.teacher.error.content',
+                    parameters: {user: this.user.firstName + ' ' + this.user.lastName}
+                }, 'notify.user.add.head.teacher.error.title', err);
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     /**
      * Suppression du droit de professeur principal
      */
     updateHeadTeacherManual(structureId: string, externalId: string, classe: any) {
-        this.spinner.perform('portal-content', this.details.updateHeadTeacherManual(structureId, externalId, classe))
-            .then(() => {
+
+        this.spinner.perform('portal-content', this.userDetailsService.updateHeadTeacherManual(this.details, structureId, externalId, classe)
+        .pipe(
+            tap(() => {
                 this.ns.success({
                     key: 'notify.user.remove.head.teacher.content',
                     parameters: {user: this.user.firstName + ' ' + this.user.lastName}
                 }, 'notify.user.remove.head.teacher.title');
                 this.cdRef.markForCheck();
-            }).catch(err => {
-            this.ns.error({
-                key: 'notify.user.remove.head.teacher.error.content',
-                parameters: {user: this.user.firstName + ' ' + this.user.lastName}
-            }, 'notify.user.remove.head.teacher.error.title', err);
-        });
+            }),
+            catchError(err => {
+                this.ns.error({
+                    key: 'notify.user.remove.head.teacher.error.content',
+                    parameters: {user: this.user.firstName + ' ' + this.user.lastName}
+                }, 'notify.user.remove.head.teacher.error.title', err);
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     disableClass = (classe) => {
@@ -103,8 +119,9 @@ export class UserClassesSectionComponent extends AbstractSection implements OnIn
     }
 
     addClass = (event) => {
-        this.spinner.perform('portal-content', this.user.addClass(event))
-            .then(() => {
+        this.spinner.perform('portal-content', this.userService.addClass(this.user, event)
+        .pipe(
+            tap(() => {
                 this.ns.success(
                     {
                         key: 'notify.user.add.class.content',
@@ -116,8 +133,8 @@ export class UserClassesSectionComponent extends AbstractSection implements OnIn
                 this.updateLightboxClasses();
                 this.filterManageableGroups();
                 this.cdRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError( err => {
                 this.ns.error(
                     {
                         key: 'notify.user.add.class.error.content',
@@ -125,33 +142,38 @@ export class UserClassesSectionComponent extends AbstractSection implements OnIn
                             classe: event.name
                         }
                     }, 'notify.user.add.class.error.title', err);
-            });
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     removeClass = (classe) => {
-        this.spinner.perform('portal-content', this.user.removeClass(classe.id, classe.externalId))
-            .then(() => {
-                this.ns.success(
-                    {
-                        key: 'notify.user.remove.class.content',
-                        parameters: {
-                            classe: classe.name
-                        }
-                    }, 'notify.user.remove.class.title');
+        this.spinner.perform('portal-content', this.userService.removeClass(this.user, classe.id, classe.externalId)
+            .pipe(
+                tap(() => {
+                    this.ns.success(
+                        {
+                            key: 'notify.user.remove.class.content',
+                            parameters: {
+                                classe: classe.name
+                            }
+                        }, 'notify.user.remove.class.title');
 
-                this.updateLightboxClasses();
-                this.filterManageableGroups();
-                this.cdRef.markForCheck();
-            })
-            .catch(err => {
-                this.ns.error(
-                    {
-                        key: 'notify.user.remove.class.error.content',
-                        parameters: {
-                            classe: classe.name
-                        }
-                    }, 'notify.user.remove.class.error.title', err);
-            });
+                    this.updateLightboxClasses();
+                    this.filterManageableGroups();
+                    this.cdRef.markForCheck();
+                }),
+                catchError(err => {
+                    this.ns.error(
+                        {
+                            key: 'notify.user.remove.class.error.content',
+                            parameters: {
+                                classe: classe.name
+                            }
+                        }, 'notify.user.remove.class.error.title', err);
+                    return throwError(err);
+                })
+        ).toPromise());
     }
 
     protected onUserChange() {

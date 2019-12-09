@@ -1,3 +1,5 @@
+import { catchError, tap } from 'rxjs/operators';
+import { UserService } from './../../../../api/user.service';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit} from '@angular/core';
 
 import {AbstractSection} from '../abstract.section';
@@ -6,7 +8,7 @@ import { UserModel } from 'src/app/core/store/models/user.model';
 import { StructureModel } from 'src/app/core/store/models/structure.model';
 import { SpinnerService } from 'ngx-ode-ui';
 import { NotifyService } from 'src/app/core/services/notify.service';
-
+import { throwError } from 'rxjs';
 @Component({
     selector: 'ode-user-functionalgroups-section',
     templateUrl: './user-functionalgroups-section.component.html',
@@ -26,6 +28,7 @@ export class UserFunctionalgroupsSectionComponent extends AbstractSection implem
     constructor(
         public spinner: SpinnerService,
         private notifyService: NotifyService,
+        private userService: UserService,
         private changeDetectorRef: ChangeDetectorRef) {
         super();
     }
@@ -70,8 +73,9 @@ export class UserFunctionalgroupsSectionComponent extends AbstractSection implem
     }
 
     addGroup = (group) => {
-        this.spinner.perform('portal-content', this.user.addFunctionalGroup(group)
-            .then(() => {
+        this.spinner.perform('portal-content', this.userService.addFunctionalGroup(this.user, group)
+        .pipe(
+            tap(() => {
                 this.notifyService.success(
                     {
                         key: 'notify.user.add.group.content',
@@ -83,8 +87,8 @@ export class UserFunctionalgroupsSectionComponent extends AbstractSection implem
                 this.updateLightboxFunctionalGroups();
                 this.filterManageableGroups();
                 this.changeDetectorRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.notifyService.error(
                     {
                         key: 'notify.user.add.group.error.content',
@@ -92,13 +96,16 @@ export class UserFunctionalgroupsSectionComponent extends AbstractSection implem
                             group: group.name
                         }
                     }, 'notify.user.add.group.error.title', err);
+                return throwError(err);
             })
+        ).toPromise()
         );
     }
 
     removeGroup = (group) => {
-        this.spinner.perform('portal-content', this.user.removeFunctionalGroup(group)
-            .then(() => {
+        this.spinner.perform('portal-content', this.userService.removeFunctionalGroup(this.user, group)
+        .pipe(
+            tap(() => {
                 this.notifyService.success(
                     {
                         key: 'notify.user.remove.group.content',
@@ -110,8 +117,8 @@ export class UserFunctionalgroupsSectionComponent extends AbstractSection implem
                 this.updateLightboxFunctionalGroups();
                 this.filterManageableGroups();
                 this.changeDetectorRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.notifyService.error(
                     {
                         key: 'notify.user.remove.group.error.content',
@@ -119,8 +126,9 @@ export class UserFunctionalgroupsSectionComponent extends AbstractSection implem
                             group: group.name
                         }
                     }, 'notify.user.remove.group.error.title', err);
+                return throwError(err);
             })
-        );
+        ).toPromise());
     }
 
     protected onUserChange() {

@@ -3,7 +3,8 @@ import { OdeComponent } from 'ngx-ode-core';
 import { forkJoin, Observable, Subject } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { UserOverview } from '../user-overview/user-overview.component';
-import { UsersService } from '../users.service';
+import {UsersService} from '../../api/users.service';
+
 
 interface Users<K> {
     user1: K;
@@ -31,7 +32,7 @@ export class SmartUsersComparisonComponent extends OdeComponent implements OnIni
         injector: Injector
         ) {
             super(injector);
-        this.usersChanged.asObservable()
+            this.usersChanged.asObservable()
             .pipe(
                 tap(() => {
                     this.user1overview = null;

@@ -1,5 +1,7 @@
+import { tap, catchError } from 'rxjs/operators';
+import { UserDetailsService } from './../../../../api/user-details.service';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, OnInit} from '@angular/core';
-
+import { throwError } from 'rxjs';
 import {AbstractSection} from '../abstract.section';
 import {UserModel} from '../../../../core/store/models/user.model';
 import { UserListService } from 'src/app/core/services/userlist.service';
@@ -20,6 +22,7 @@ export class UserChildrenSectionComponent extends AbstractSection implements OnI
 
     constructor(
             public userListService: UserListService,
+            public userDetailsService: UserDetailsService,
             public spinner: SpinnerService,
             private ns: NotifyService,
             protected cdRef: ChangeDetectorRef) {
@@ -54,34 +57,39 @@ export class UserChildrenSectionComponent extends AbstractSection implements OnI
     }
 
     addChild = (child) => {
-        this.spinner.perform('portal-content', this.details.addChild(child)
-            .then(() => {
-                this.ns.success(
-                    {
-                        key: 'notify.user.add.child.content',
-                        parameters: {
-                            child:  child.displayName
-                        }
-                    }, 'notify.user.add.child.title');
 
-                this.updateLightboxChildren();
-                this.cdRef.markForCheck();
-            })
-            .catch(err => {
-                this.ns.error(
-                    {
-                        key: 'notify.user.add.child.error.content',
-                        parameters: {
-                            child:  child.displayName
-                        }
-                    }, 'notify.user.add.child.error.title', err);
-            })
+        this.spinner.perform('portal-content', this.userDetailsService.addChild(this.details, child)
+            .pipe(
+                tap(() => {
+                    this.ns.success(
+                        {
+                            key: 'notify.user.add.child.content',
+                            parameters: {
+                                child:  child.displayName
+                            }
+                        }, 'notify.user.add.child.title');
+
+                    this.updateLightboxChildren();
+                    this.cdRef.markForCheck();
+                }),
+                catchError(err => {
+                    this.ns.error(
+                        {
+                            key: 'notify.user.add.child.error.content',
+                            parameters: {
+                                child:  child.displayName
+                            }
+                        }, 'notify.user.add.child.error.title', err);
+                    return throwError(err);
+                })
+            ).toPromise()
         );
     }
 
     removeChild = (child) => {
-        this.spinner.perform('portal-content', this.details.removeChild(child)
-            .then(() => {
+        this.spinner.perform('portal-content', this.userDetailsService.removeChild(this.details, child)
+        .pipe(
+            tap(() => {
                 this.ns.success(
                     {
                         key: 'notify.user.remove.child.content',
@@ -92,8 +100,8 @@ export class UserChildrenSectionComponent extends AbstractSection implements OnI
 
                 this.updateLightboxChildren();
                 this.cdRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error(
                     {
                         key: 'notify.user.remove.child.error.content',
@@ -101,7 +109,9 @@ export class UserChildrenSectionComponent extends AbstractSection implements OnI
                             child:  child.displayName
                         }
                     }, 'notify.user.remove.child.error.title', err);
+                return throwError(err);
             })
+        ).toPromise()
         );
     }
 }

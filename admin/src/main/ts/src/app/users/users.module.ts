@@ -21,7 +21,7 @@ import {GroupNameService} from '../core/services/group-name.service';
 import {UsersComparisonComponent} from './users-comparison/users-comparison.component';
 import {UserOverviewComponent} from './user-overview/user-overview.component';
 import {SmartUsersComparisonComponent} from './smart-users-comparison/smart-users-comparison.component';
-import {UsersService} from './users.service';
+import {UsersService} from '../api/users.service';
 import {CommunicationModule} from '../communication/communication.module';
 import { UserChildrenSectionComponent } from './details/sections/children/user-children-section.component';
 import { UserAafFunctionsComponent } from './details/sections/aaf-functions/user-aaf-functions-section.component';

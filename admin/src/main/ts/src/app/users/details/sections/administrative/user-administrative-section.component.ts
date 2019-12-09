@@ -1,8 +1,10 @@
+import { tap, catchError } from 'rxjs/operators';
+import { UserDetailsService } from './../../../../api/user-details.service';
 import {Component, ViewChild} from '@angular/core';
 import {AbstractControl, NgForm} from '@angular/forms';
 
 import {AbstractSection} from '../abstract.section';
-
+import { throwError } from 'rxjs';
 import {UserInfoService} from '../info/user-info.service';
 
 import {globalStore} from '../../../../core/store/global.store';
@@ -30,6 +32,7 @@ export class UserAdministrativeSectionComponent extends AbstractSection {
     constructor(
         private usersStore: UsersStore,
         private ns: NotifyService,
+        private userDetailsService: UserDetailsService,
         public spinner: SpinnerService,
         private userListService: UserListService,
         private userInfoService: UserInfoService) {
@@ -38,13 +41,14 @@ export class UserAdministrativeSectionComponent extends AbstractSection {
 
     protected onUserChange() {
         if (this.administrativeForm) {
-            this.administrativeForm.reset(this.details && this.details.toJSON());
+            this.administrativeForm.reset(this.details && this.userDetailsService.toJSON(this.details));
         }
     }
 
     updateDetails() {
-        this.spinner.perform('portal-content', this.details.update())
-            .then(() => {
+        this.spinner.perform('portal-content', this.userDetailsService.update(this.details)
+        .pipe(
+            tap(() => {
                 if (this.firstNameInput && this.firstNameInput.dirty) {
                     this.user.firstName = this.details.firstName;
                 }
@@ -54,7 +58,7 @@ export class UserAdministrativeSectionComponent extends AbstractSection {
                 this.updateInStructures();
                 this.userListService.$updateSubject.next();
 
-                this.administrativeForm.reset(this.details && this.details.toJSON());
+                this.administrativeForm.reset(this.details && this.userDetailsService.toJSON(this.details));
 
                 this.ns.success(
                     {
@@ -65,8 +69,8 @@ export class UserAdministrativeSectionComponent extends AbstractSection {
                     }, 'notify.user.update.title');
 
                 this.userInfoService.setState(this.details);
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error(
                     {
                         key: 'notify.user.update.error.content',
@@ -74,7 +78,9 @@ export class UserAdministrativeSectionComponent extends AbstractSection {
                             user: this.user.firstName + ' ' + this.user.lastName
                         }
                     }, 'notify.user.update.error.title', err);
-            });
+                return throwError(err);
+            })
+        ).toPromise());
     }
 
     private updateInStructures() {

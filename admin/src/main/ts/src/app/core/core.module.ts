@@ -12,7 +12,15 @@ import { SessionResolver } from './resolvers/session.resolver';
 import { StructuresResolver } from './resolvers/structures.resolver';
 import { NotifyService } from './services/notify.service';
 import { SijilLabelsService } from './services/sijil.labels.service';
+import { SessionService } from './../api/session.service';
+import { StructuresService } from '../api/structures.service';
+import { Logger } from 'ngx-ode-core';
+import { OdeHttpClient } from './ode/OdeHttpClient';
+import { HttpHandler } from '@angular/common/http';
 
+export function applicationHttpClientCreator(httpHandler: HttpHandler, logger: Logger) {
+    return new OdeHttpClient(httpHandler, logger);
+  }
 @NgModule({
     imports: [
         CommonModule,
@@ -33,7 +41,15 @@ import { SijilLabelsService } from './services/sijil.labels.service';
         SijilLabelsService,
         NotifyService,
         SpinnerService,
-        ConfigResolver
+        ConfigResolver,
+        Logger,
+        StructuresService,
+        SessionService,
+        {
+            provide: OdeHttpClient,
+            useFactory: applicationHttpClientCreator,
+            deps: [HttpHandler, Logger]
+        }
     ],
 })
 export class CoreModule {

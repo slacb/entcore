@@ -1,13 +1,17 @@
 import { Location } from '@angular/common';
 import { Component, Injector, OnDestroy, OnInit } from '@angular/core';
-import { Data } from '@angular/router';
 import { OdeComponent } from 'ngx-ode-core';
 import { SelectOption, SpinnerService } from 'ngx-ode-ui';
+import { tap, catchError } from 'rxjs/operators';
+import { UserService } from './../../api/user.service';
+import {ActivatedRoute, Data, Router} from '@angular/router';
+import { Subscription, throwError } from 'rxjs';
+
+import {UsersStore} from '../users.store';
+import {routing} from '../../core/services/routing.service';
+import {UserModel} from '../../core/store/models/user.model';
+import { UserChildrenListService, UserListService } from 'src/app/core/services/userlist.service';
 import { NotifyService } from 'src/app/core/services/notify.service';
-import { UserChildrenListService } from 'src/app/core/services/userlist.service';
-import { routing } from '../../core/services/routing.service';
-import { UserModel } from '../../core/store/models/user.model';
-import { UsersStore } from '../users.store';
 
 
 @Component({
@@ -33,6 +37,8 @@ export class UserCreateComponent extends OdeComponent implements OnInit, OnDestr
         private ns: NotifyService,
         private spinner: SpinnerService,
         private location: Location,
+        private userListService: UserListService,
+        private userService: UserService,
         public userChildrenListService: UserChildrenListService) {
             super(injector);
     }
@@ -48,7 +54,6 @@ export class UserCreateComponent extends OdeComponent implements OnInit, OnDestr
 
         this.subscriptions.add(routing.observe(this.route, 'data').subscribe((data: Data) => {
             if (data.structure) {
-
                 this.newUser.structures = [data.structure];
                 this.classeOptions = [{value: null, label: 'create.user.sansclasse'}];
                 this.classeOptions.push(...this.usersStore.structure.classes.map(c => ({value: [c], label: c.name})));
@@ -58,15 +63,16 @@ export class UserCreateComponent extends OdeComponent implements OnInit, OnDestr
     }
 
     createNewUser() {
-        this.spinner.perform('portal-content', this.newUser.createNewUser(this.usersStore.structure.id)
-            .then(res => {
+        this.spinner.perform('portal-content', this.userService.createNewUser(this.newUser, this.usersStore.structure.id)
+        .pipe(
+            tap((res: any) => {
                 this.ns.success({
-                        key: 'notify.user.create.content',
-                        parameters: {
-                            user: this.newUser.firstName + ' ' + this.newUser.lastName
-                        }
+                    key: 'notify.user.create.content',
+                    parameters: {
+                        user: this.newUser.firstName + ' ' + this.newUser.lastName
                     }
-                    , 'notify.user.create.title');
+                }
+                , 'notify.user.create.title');
 
                 this.newUser.id = res.data.id;
                 this.newUser.source = 'MANUAL';
@@ -80,16 +86,18 @@ export class UserCreateComponent extends OdeComponent implements OnInit, OnDestr
                     relativeTo: this.route,
                     replaceUrl: false
                 });
-            }).catch(err => {
+            }),
+            catchError((err: any) => {
                 this.ns.error({
-                        key: 'notify.user.create.error.content',
-                        parameters: {
-                            user: this.newUser.firstName + ' ' + this.newUser.lastName
-                        }
+                    key: 'notify.user.create.error.content',
+                    parameters: {
+                        user: this.newUser.firstName + ' ' + this.newUser.lastName
                     }
-                    , 'notify.user.create.error.title', err);
+                }
+                , 'notify.user.create.error.title', err);
+                return throwError(err);
             })
-        );
+        ).toPromise());
     }
 
     addChild(child) {

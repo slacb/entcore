@@ -2,12 +2,14 @@ import { ChangeDetectionStrategy, Component, Injector, OnInit } from '@angular/c
 import { Data } from '@angular/router';
 import { OdeComponent } from 'ngx-ode-core';
 import { BundlesService } from 'ngx-ode-sijil';
-import { FlashMessageModel } from 'src/app/core/store/models/flashmessage.model';
+import { isArray } from 'util';
+import {Subscription} from 'rxjs';
+import {routing} from '../../../core/services/routing.service';
+import {NotifyService} from '../../../core/services/notify.service';
+import {MessageFlashService} from '../message-flash.service';
+import {MessageFlashStore} from '../message-flash.store';
 import { StructureModel } from 'src/app/core/store/models/structure.model';
-import { NotifyService } from '../../../core/services/notify.service';
-import { routing } from '../../../core/services/routing.service';
-import { MessageFlashService } from '../message-flash.service';
-import { MessageFlashStore } from '../message-flash.store';
+import { FlashMessageModel } from 'src/app/core/store/models/flashmessage.model';
 
 
 @Component({
@@ -48,7 +50,7 @@ export class MessageFlashListComponent extends OdeComponent implements OnInit {
             if (data.structure) {
                 this.structure = data.structure;
             }
-            if (data.messages) {
+            if (data.messages && isArray(data.messages)) {
                 this.messages = data.messages.filter(mess => !this.isMessageFromParentStructure(mess));
                 this.messages.forEach(mess => this.checkboxes[mess.id] = false);
                 this.messagesFromParentStructure = data.messages.filter(mess => this.isMessageFromParentStructure(mess));

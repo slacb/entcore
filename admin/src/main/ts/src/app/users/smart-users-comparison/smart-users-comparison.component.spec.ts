@@ -1,6 +1,6 @@
 import {SmartUsersComparisonComponent} from './smart-users-comparison.component';
 import {async, ComponentFixture, TestBed} from '@angular/core/testing';
-import {UsersService} from '../users.service';
+import {UsersService} from '../../api/users.service';
 import {Component, Input} from '@angular/core';
 import {UserOverview} from '../user-overview/user-overview.component';
 import {of} from 'rxjs';

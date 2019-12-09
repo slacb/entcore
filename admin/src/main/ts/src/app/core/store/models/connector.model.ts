@@ -1,7 +1,7 @@
 import {Mix, Model} from 'entcore-toolkit';
 import { RoleModel } from './role.model';
 
-export class ConnectorModel extends Model<ConnectorModel> {
+export class ConnectorModel {
     private _id: string;
     public get id() {
         return this._id;
@@ -43,15 +43,15 @@ export class ConnectorModel extends Model<ConnectorModel> {
     structureId: string;
 
     constructor() {
-        super({});
+        // super({});
         this.roles = [];
     }
 
-    syncRoles = (structureId: string, connectorId: string): Promise<void> => {
-        return this.http.get(`/appregistry/application/external/${connectorId}/groups/roles?structureId=${structureId}`)
-            .then(res => {
-                this.roles = Mix.castArrayAs(RoleModel, res.data);
-            }
-        );
-    }
+    // syncRoles = (structureId: string, connectorId: string): Promise<void> => {
+    //     return this.http.get(`/appregistry/application/external/${connectorId}/groups/roles?structureId=${structureId}`)
+    //         .then(res => {
+    //             this.roles = Mix.castArrayAs(RoleModel, res.data);
+    //         }
+    //     );
+    // }
 }

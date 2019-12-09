@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Injector, Input, OnChanges, Output } from '@angular/core';
 import { OdeComponent } from 'ngx-ode-core';
 import { BundlesService } from 'ngx-ode-sijil';
-import { ProfilesService } from 'src/app/core/services/profiles.service';
 import { UserlistFiltersService } from 'src/app/core/services/userlist.filters.service';
 import { StructureModel } from '../../../../../core/store/models/structure.model';
+
+import { tap, mergeMap } from 'rxjs/operators';
+import { StructureService } from './../../../../../api/structure.service';
+import { ProfileServiceService } from './../../../../../api/profile-service.service';
 
 
 @Component({
@@ -34,6 +37,8 @@ export class GroupInputFiltersComponent extends OdeComponent implements OnChange
         private _eref: ElementRef,
         private bundles: BundlesService,
         public listFilters: UserlistFiltersService,
+        private profileService: ProfileServiceService,
+        private structureService: StructureService,
         injector: Injector) {
             super(injector);
         }
@@ -47,23 +52,33 @@ export class GroupInputFiltersComponent extends OdeComponent implements OnChange
     private initFilters() {
         this.listFilters.resetFilters();
 
-        this.structure.syncClasses().then(() => {
-            this.listFilters.setClassesComboModel(this.structure.classes);
-            this.changeDetector.markForCheck();
-        });
-        this.structure.syncAafFunctions().then(() => {
-            const aafFunctions: Array<Array<string>> = [];
-            this.structure.aafFunctions.forEach(f => {
-                f.forEach(f2 => aafFunctions.push([f2[2], f2[4]]));
-            });
-            this.listFilters.setFunctionsComboModel(aafFunctions);
-            this.changeDetector.markForCheck();
-        });
-        ProfilesService.getProfiles().then(p => {
-            this.structure.profiles = p;
-            this.listFilters.setProfilesComboModel(this.structure.profiles.map(p => p.name));
-            this.changeDetector.markForCheck();
-        });
+        this.structureService.syncClasses(this.structure)
+        .pipe(
+            tap(() => {
+                this.listFilters.setClassesComboModel(this.structure.classes);
+                this.changeDetector.markForCheck();
+            }),
+            mergeMap(() => this.structureService.syncAafFunctions(this.structure)
+            .pipe(
+                tap(() => {
+                    const aafFunctions: Array<Array<string>> = [];
+                    this.structure.aafFunctions.forEach(f => {
+                        f.forEach(f2 => aafFunctions.push([f2[2], f2[4]]));
+                    });
+                    this.listFilters.setFunctionsComboModel(aafFunctions);
+                    this.changeDetector.markForCheck();
+                })
+            )),
+            mergeMap(() => this.profileService.getProfiles()
+            .pipe(
+                tap((profiles) => {
+                    this.structure.profiles = profiles;
+                    this.listFilters.setProfilesComboModel(this.structure.profiles.map(p => p.name));
+                    this.changeDetector.markForCheck();
+                })
+            ))
+        ).subscribe(() => {});
+
         this.structure.groups.sync().then(() => {
             this.listFilters.setFunctionalGroupsComboModel(
                 this.structure.groups.data.filter(g => g.type === 'FunctionalGroup').map(g => g.name));

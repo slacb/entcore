@@ -1,6 +1,7 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, Injector, Input } from '@angular/core';
 import { OdeComponent } from 'ngx-ode-core';
 import { StructureModel } from '../../../core/store/models/structure.model';
+import { StructureService } from './../../../api/structure.service';
 
 @Component({
     selector: 'ode-user-search-card',
@@ -12,7 +13,7 @@ export class UserSearchCardComponent extends OdeComponent implements AfterViewIn
     loading = false;
     foundUsers: Array<{id: string, firstName: string, lastName: string}> = [];
 
-    constructor(injector: Injector) {
+    constructor(injector: Injector, private structureService: StructureService) {
         super(injector);
     }
 
@@ -23,13 +24,14 @@ export class UserSearchCardComponent extends OdeComponent implements AfterViewIn
         this._inputValue = value;
         if (this._inputValue && !this.loading) {
             this.loading = true;
-            this.structure.quickSearchUsers(this._inputValue).then(res => {
-                this.foundUsers = res.data;
-            }).catch(err => {
-                console.error(err);
-            }).then(() => {
+
+            this.structureService.quickSearchUsers(this.structure, this._inputValue)
+            .subscribe(res => {
+                this.foundUsers = res;
                 this.loading = false;
                 this.changeDetector.markForCheck();
+            }, err => {
+                console.error(err);
             });
         } else {
             this.foundUsers = [];

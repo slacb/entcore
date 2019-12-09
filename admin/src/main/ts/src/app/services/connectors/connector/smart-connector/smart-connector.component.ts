@@ -1,22 +1,27 @@
 import { Location } from '@angular/common';
 import { Component, Injector, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Data, Params } from '@angular/router';
 import { OdeComponent } from 'ngx-ode-core';
 import { BundlesService } from 'ngx-ode-sijil';
 import { SpinnerService } from 'ngx-ode-ui';
-import { catchError, tap } from 'rxjs/operators';
+import { ConnectorService } from './../../../../api/connector.service';
+import {Subscription} from 'rxjs';
+import {CasType} from '../CasType';
+import {ServicesService, WorkspaceDocument} from '../../../services.service';
+import {ActivatedRoute, Data, Params, Router} from '@angular/router';
+import {ServicesStore} from '../../../services.store';
+import {ConnectorPropertiesComponent} from '../properties/connector-properties.component';
+import {Assignment, Profile} from '../../../shared/services-types';
+import {ExportFormat} from '../export/connector-export.component';
+import { catchError, tap, mergeMap } from 'rxjs/operators';
+import { GroupModel } from 'src/app/core/store/models/group.model';
 import { NotifyService } from 'src/app/core/services/notify.service';
 import { routing } from 'src/app/core/services/routing.service';
 import { Session } from 'src/app/core/store/mappings/session';
 import { ConnectorModel } from 'src/app/core/store/models/connector.model';
-import { GroupModel } from 'src/app/core/store/models/group.model';
 import { SessionModel } from 'src/app/core/store/models/session.model';
-import { ServicesService, WorkspaceDocument } from '../../../services.service';
-import { ServicesStore } from '../../../services.store';
-import { Assignment, Profile } from '../../../shared/services-types';
-import { CasType } from '../CasType';
-import { ExportFormat } from '../export/connector-export.component';
-import { ConnectorPropertiesComponent } from '../properties/connector-properties.component';
+import { RoleService } from 'src/app/api/role.service';
+
+
 
 @Component({
     selector: 'ode-smart-connector',
@@ -45,9 +50,11 @@ export class SmartConnectorComponent extends OdeComponent implements OnInit, OnD
     constructor(private servicesService: ServicesService,
                 injector: Injector,
                 public servicesStore: ServicesStore,
+                private roleService: RoleService,
                 private spinnerService: SpinnerService,
                 private notifyService: NotifyService,
                 private location: Location,
+                private connectorService :ConnectorService,
                 private bundles: BundlesService) {
                   super(injector);
     }
@@ -300,32 +307,31 @@ export class SmartConnectorComponent extends OdeComponent implements OnInit, OnD
     }
 
     public onAddAssignment(assignment: Assignment): void {
-        assignment.role.addGroup(assignment.group);
+      this.roleService.addGroup(assignment.role, assignment.group)
+      .subscribe(() => {});
     }
 
     public onRemoveAssignment(assignment: Assignment): void {
-        assignment.role.removeGroup(assignment.group);
+      this.roleService.removeGroup(assignment.role, assignment.group)
+      .subscribe(() => {});
     }
 
     public onAddMassAssignment(profiles: Array<Profile>): void {
         this.spinnerService.perform('portal-content',
             this.servicesService.massAssignConnector(this.servicesStore.connector, profiles)
               .pipe(
-
-                tap(() => {
-                  this.servicesStore.connector
-                    .syncRoles(this.servicesStore.structure.id, this.servicesStore.connector.id)
-                    .then(() => {
-                      this.servicesStore.connector.roles
-                        .forEach(r => {
-                          r.name = `${this.servicesStore.connector.name} - ${this.bundles.translate('services.connector.access')}`;
-                        });
-                    });
-
-                  this.notifyService.success(
-                    'services.connector.mass-assignment.assign-success.content',
-                    'services.connector.mass-assignment.assign-success.title');
-                }),
+                      mergeMap(() => this.connectorService.syncRoles(this.servicesStore.connector, this.servicesStore.structure)
+                      .pipe(
+                        tap(() => {
+                          this.servicesStore.connector.roles
+                          .forEach(r => {
+                            r.name = `${this.servicesStore.connector.name} - ${this.bundles.translate('services.connector.access')}`;
+                          });
+                          this.notifyService.success(
+                            'services.connector.mass-assignment.assign-success.content',
+                            'services.connector.mass-assignment.assign-success.title');
+                        })
+                      )),
                 catchError(
                   error => {
                     this.notifyService.error(
@@ -342,20 +348,18 @@ export class SmartConnectorComponent extends OdeComponent implements OnInit, OnD
         this.spinnerService.perform('portal-content',
             this.servicesService.massUnassignConnector(this.servicesStore.connector, profiles)
               .pipe(
-                tap(() => {
-                  this.servicesStore.connector
-                    .syncRoles(this.servicesStore.structure.id, this.servicesStore.connector.id)
-                    .then(() => {
-                      this.servicesStore.connector.roles
+                mergeMap(() => this.connectorService.syncRoles(this.servicesStore.connector, this.servicesStore.structure)
+                .pipe(
+                  tap(() => {
+                    this.servicesStore.connector.roles
                         .forEach(r => {
                           r.name = `${this.servicesStore.connector.name} - ${this.bundles.translate('services.connector.access')}`;
                         });
-                    });
-
-                  this.notifyService.success(
+                    this.notifyService.success(
                     'services.connector.mass-assignment.unassign-success.content',
                     'services.connector.mass-assignment.unassign-success.title');
-                }),
+                  })
+                )),
                 catchError(error => {
                   this.notifyService.error(
                     'services.connector.mass-assignment.unassign-error.content',

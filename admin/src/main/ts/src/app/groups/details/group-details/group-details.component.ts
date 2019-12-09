@@ -65,9 +65,11 @@ export class GroupDetailsComponent extends OdeComponent implements OnInit, OnDes
         const groupChangesObserver = this.route.params
             .pipe(
                 filter(params => params.groupId),
-                tap(params =>
+                tap(params => {
                 this.groupsStore.group = this.groupsStore.structure.groups.data
-                    .find(g => g.id === params.groupId)
+                    .find(g => g.id === params.groupId);
+                    console.log('groupsStore group = ',this.groupsStore.group )
+                }
                 )
             );
 

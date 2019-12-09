@@ -64,15 +64,15 @@
       </ode-form-field>
       <ode-form-field label="functions" *ngIf="!user.deleteDate">
         <div>
-          <div *ngIf="!details.isAdmc()">
+          <div *ngIf="!userDetailsService.isAdmc(details)">
             <button type="button"
-                    *ngIf="!details.isAdml(this.structure.id)"
+                    *ngIf="!userDetailsService.isAdml(details, this.structure.id)"
                     (click)="addAdml()">
               <s5l>adml.add</s5l>
               <i class="fa fa-cog"></i>
             </button>
             <button type="button"
-                    *ngIf="details.isAdml(this.structure.id)"
+                    *ngIf="userDetailsService.isAdml(details, this.structure.id)"
                     (click)="showConfirmation = true">
               <s5l>adml.remove</s5l>
               <i class="fa fa-cog"></i>

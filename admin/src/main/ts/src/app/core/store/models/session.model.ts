@@ -3,7 +3,7 @@ import { Session } from '../mappings/session';
 
 export class SessionModel {
 
-    private static session: Session;
+    static session: Session;
 
     public static getSession(): Promise<Session> {
         if (!SessionModel.session) {

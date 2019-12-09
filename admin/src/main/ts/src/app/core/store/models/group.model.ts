@@ -5,7 +5,7 @@ export type InternalCommunicationRule = 'BOTH' | 'INCOMING' | 'OUTGOING' | 'NONE
 
 export type GroupType = 'ProfileGroup' | 'FunctionalGroup' | 'ManualGroup' | 'CommunityGroup' | 'FunctionGroup' | 'HTGroup';
 
-export class GroupModel extends Model<GroupModel> {
+export class GroupModel {
 
     id?: string;
     name?: string;
@@ -20,30 +20,30 @@ export class GroupModel extends Model<GroupModel> {
     internalCommunicationRule?: InternalCommunicationRule;
 
     constructor() {
-        super({
-            create: '/directory/group'
-        });
+        // super({
+        //     create: '/directory/group'
+        // });
         this.users = new Array<UserModel>();
     }
 
-    syncUsers() {
-        return this.http.get(`/directory/user/admin/list?groupId=${this.id}`).then(res => {
-            this.users = res.data;
-        });
-    }
+    // syncUsers() {
+    //     return this.http.get(`/directory/user/admin/list?groupId=${this.id}`).then(res => {
+    //         this.users = res.data;
+    //     });
+    // }
 
-    addUsers(users: UserModel[]) {
-        return this.http.put(`/directory/group/${this.id}/users/add`, {userIds: users.map(u => u.id)});
-    }
+    // addUsers(users: UserModel[]) {
+    //     return this.http.put(`/directory/group/${this.id}/users/add`, {userIds: users.map(u => u.id)});
+    // }
 
-    removeUsers(users: UserModel[]) {
-        return this.http.put(`/directory/group/${this.id}/users/delete`, {userIds: users.map(u => u.id)});
-    }
+    // removeUsers(users: UserModel[]) {
+    //     return this.http.put(`/directory/group/${this.id}/users/delete`, {userIds: users.map(u => u.id)});
+    // }
 
-    toJSON() {
-        return {
-            name: this.name,
-            structureId: this.structureId
-        };
-    }
+    // toJSON() {
+    //     return {
+    //         name: this.name,
+    //         structureId: this.structureId
+    //     };
+    // }
 }

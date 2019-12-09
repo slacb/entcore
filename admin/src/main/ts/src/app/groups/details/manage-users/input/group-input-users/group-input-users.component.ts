@@ -1,12 +1,14 @@
 import { Component, Injector, Input, OnDestroy, OnInit, Output, EventEmitter } from '@angular/core';
 import { OdeComponent } from 'ngx-ode-core';
 import { OrderPipe, SelectOption, SpinnerService } from 'ngx-ode-ui';
-import { NotifyService } from 'src/app/core/services/notify.service';
+import { GroupsService } from './../../../../../api/groups.service';
+
+import {DeleteFilter, UserlistFiltersService} from '../../../../../core/services/userlist.filters.service';
 import { UserListService } from 'src/app/core/services/userlist.service';
+import { UserModel } from 'src/app/core/store/models/user.model';
+import { NotifyService } from 'src/app/core/services/notify.service';
 import { globalStore } from 'src/app/core/store/global.store';
 import { StructureModel } from 'src/app/core/store/models/structure.model';
-import { UserModel } from 'src/app/core/store/models/user.model';
-import { DeleteFilter, UserlistFiltersService } from '../../../../../core/services/userlist.filters.service';
 import { GroupsStore } from '../../../../groups.store';
 
 
@@ -36,6 +38,7 @@ export class GroupInputUsersComponent extends OdeComponent implements OnInit, On
 
     constructor(private groupsStore: GroupsStore,
                 public userLS: UserListService,
+                private groupsService: GroupsService,
                 private spinner: SpinnerService,
                 private ns: NotifyService,
                 injector: Injector,

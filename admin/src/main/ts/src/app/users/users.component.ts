@@ -28,6 +28,7 @@ export class UsersComponent extends OdeComponent implements OnInit, OnDestroy {
         super.ngOnInit();
         this.subscriptions.add(routing.observe(this.route, 'data').subscribe((data: Data) => {
             if (data.structure) {
+                console.log('DATA ROUTE USERS COMPONENT', data);
                 const structure: StructureModel = data.structure;
                 this.usersStore.structure = structure;
                 this.initFilters(structure);

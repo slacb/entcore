@@ -23,13 +23,13 @@
     </div>
   </ode-lightbox>
   <ul class="actions-list">
-    <li *ngFor="let structure of user.visibleStructures()">
+    <li *ngFor="let structure of userService.visibleStructures(user)">
       <span>{{ structure.name }}</span>
       <i class="fa fa-times action" (click)="removeStructure(structure)"
          [title]="'delete.this.structure' | translate"
          [ngClass]="{ disabled: spinner.isLoading(structure.id)}"></i>
     </li>
-    <li *ngFor="let structure of user.invisibleStructures()">
+    <li *ngFor="let structure of userService.invisibleStructures(user)">
       <span>{{ structure.name }}</span>
     </li>
   </ul>

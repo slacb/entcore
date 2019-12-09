@@ -1,15 +1,17 @@
+import { tap } from 'rxjs/operators';
+import { StructureService } from './../api/structure.service';
 import {Injectable} from '@angular/core';
 import {ActivatedRouteSnapshot, Resolve} from '@angular/router';
 
 import { StructureModel } from '../core/store/models/structure.model';
 import { globalStore } from '../core/store/global.store';
 import { SpinnerService } from 'ngx-ode-ui';
-import { ProfilesService } from '../core/services/profiles.service';
 
-@Injectable()
+@Injectable({providedIn: 'root'})
 export class StructureResolver implements Resolve<StructureModel> {
 
-    constructor(private spinner: SpinnerService) {}
+    constructor(private spinner: SpinnerService,
+                private structureService: StructureService) {}
 
     resolve(route: ActivatedRouteSnapshot): Promise<StructureModel> {
         const structure: StructureModel = globalStore.structures.data.find(s => s.id === route.params.structureId);
@@ -19,17 +21,9 @@ export class StructureResolver implements Resolve<StructureModel> {
             });
         }
 
-        return this.spinner.perform('portal-content', sync(structure));
+
+        return this.spinner.perform('portal-content', this.structureService.sync(structure).pipe(tap((res) => { console.log({'structure': res}); })).toPromise());
     }
 
 }
 
-export function sync(structure: StructureModel, force?: boolean): Promise<StructureModel> {
-    const classesPromise = structure.syncClasses(force);
-    const groupsPromise = structure.syncGroups(force);
-    const sourcesPromise = structure.syncSources(force);
-    const aafFunctionsPromise = structure.syncAafFunctions(force);
-    const profilesPromise = ProfilesService.getProfiles().then(p => structure.profiles = p);
-    return Promise.all<any>([classesPromise, groupsPromise, sourcesPromise, aafFunctionsPromise, profilesPromise])
-        .then(() => Promise.resolve(structure));
-}

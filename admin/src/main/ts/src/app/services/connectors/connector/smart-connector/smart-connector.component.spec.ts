@@ -1,3 +1,4 @@
+import { ConnectorService } from './../../../../api/connector.service';
 import {SmartConnectorComponent} from './smart-connector.component';
 import {async, ComponentFixture, TestBed} from '@angular/core/testing';
 import {Location} from '@angular/common';
@@ -28,6 +29,7 @@ describe('SmartConnector', () => {
     let mockBundle: BundlesService;
     let mockActivatedRoute: ActivatedRoute;
     let connectorsDataPushSpy: jasmine.Spy;
+    let connectorService: ConnectorService;
     let connectorsDataSpliceSpy: jasmine.Spy;
 
     beforeEach(() => {

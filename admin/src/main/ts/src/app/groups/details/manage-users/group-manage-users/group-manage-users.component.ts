@@ -1,12 +1,14 @@
 import { Component, EventEmitter, Injector, OnInit, Output, ViewChild, ElementRef } from '@angular/core';
 import { OdeComponent } from 'ngx-ode-core';
-import { Subscription } from 'rxjs';
+import { Subscription, throwError } from 'rxjs';
 import { UserModel } from '../../../../core/store/models/user.model';
 import { GroupsStore } from '../../../groups.store';
 import { SpinnerService } from 'ngx-ode-ui';
 import { NotifyService } from 'src/app/core/services/notify.service';
 import { GroupInputUsersComponent } from '../input/group-input-users/group-input-users.component';
 import { GroupOutputUsersComponent } from '../output/group-output-users/group-output-users.component';
+import { GroupsService } from 'src/app/api/groups.service';
+import { tap, catchError } from 'rxjs/operators';
 
 @Component({
     selector: 'ode-group-manage-users',
@@ -31,7 +33,8 @@ export class GroupManageUsersComponent extends OdeComponent implements OnInit {
     constructor(public groupsStore: GroupsStore,
                 injector: Injector,
                 private spinner: SpinnerService,
-                private notifyService: NotifyService) {
+                private notifyService: NotifyService,
+                private groupsService: GroupsService) {
         super(injector);
     }
 
@@ -55,39 +58,44 @@ export class GroupManageUsersComponent extends OdeComponent implements OnInit {
 
     addUsers(): void {
         this.spinner.perform('group-manage-users',
-            this.groupsStore.group.addUsers(this.inputUsersSelected)
-                .then(() => {
-                    this.groupsStore.group.users = this.groupsStore.group.users.concat(this.inputUsersSelected);
-                    this.inputUsers = this.inputUsers.filter(u => this.inputUsersSelected.indexOf(u) === -1);
-                    this.inputUsersSelected = [];
-                    this.groupInputUsersComponent.selectedUsers = [];
-                    this.notifyService.success('notify.group.manage.users.added.content');
-                    this.changeDetector.markForCheck();
-                })
-                .catch((err) => {
-                    this.notifyService.error('notify.group.manage.users.added.error.content'
-                        , 'notify.group.manage.users.added.error.title', err);
-                })
-        );
+            this.groupsService.addUsers(this.groupsStore.group, this.inputUsersSelected)
+                .pipe(
+                    tap(() => {
+                        this.groupsStore.group.users = this.groupsStore.group.users.concat(this.inputUsersSelected);
+                        this.inputUsers = this.inputUsers.filter(u => this.inputUsersSelected.indexOf(u) === -1);
+                        this.inputUsersSelected = [];
+                        this.groupInputUsersComponent.selectedUsers = [];
+                        this.notifyService.success('notify.group.manage.users.added.content');
+                        this.changeDetector.markForCheck();
+                    }),
+                    catchError(err => {
+                        this.notifyService.error('notify.group.manage.users.added.error.content'
+                                , 'notify.group.manage.users.added.error.title', err);
+                        return throwError(err);
+                    })
+                ).toPromise());
     }
 
     removeUsers(): void {
         this.spinner.perform('group-manage-users',
-            this.groupsStore.group.removeUsers(this.outputUsersSelected)
-                .then(() => {
-                    this.groupsStore.group.users = this.groupsStore.group.users.filter(gu => this.outputUsersSelected.indexOf(gu) === -1);
-                    this.inputUsers = this.inputUsers.concat(this.outputUsersSelected);
-                    this.outputUsersSelected = [];
-                    this.groupOutputUsersComponent.selectedUsers = [];
-                    this.notifyService.success('notify.group.manage.users.removed.content');
-                    this.changeDetector.markForCheck();
-                })
-                .catch((err) => {
-                    this.notifyService.error('notify.group.manage.users.removed.error.content'
-                        , 'notify.group.manage.users.removed.error.title'
-                        , err);
-                })
-        );
+            this.groupsService.removeUsers(this.groupsStore.group, this.outputUsersSelected )
+                .pipe(
+                    tap(() => {
+                        this.groupsStore.group.users = this.groupsStore.group.users.filter(gu => this.outputUsersSelected.indexOf(gu) === -1);
+                        this.inputUsers = this.inputUsers.concat(this.outputUsersSelected);
+                        this.outputUsersSelected = [];
+                        this.groupOutputUsersComponent.selectedUsers = [];
+                        this.notifyService.success('notify.group.manage.users.removed.content');
+                        this.changeDetector.markForCheck();
+                    }),
+                    catchError(err => {
+                        this.notifyService.error('notify.group.manage.users.removed.error.content'
+                            , 'notify.group.manage.users.removed.error.title'
+                            , err);
+                        return throwError(err);
+                    })
+                ).toPromise()
+            );
     }
 
     onInputSelectUsers(users: UserModel[]): void {

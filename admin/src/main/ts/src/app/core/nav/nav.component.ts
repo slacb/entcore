@@ -35,13 +35,17 @@ export class NavComponent extends OdeComponent implements OnInit, OnDestroy {
         super(injector);
     }
 
+
     ngOnInit() {
         super.ngOnInit();
-        this.structures = globalStore.structures.asTree();
-
-        if (this.structures.length === 1 && !this.structures[0].children) {
-            this.currentStructure = this.structures[0];
-        }
+        this.subscriptions.add(this.route.data.subscribe( (data: any) => {
+            this.info('ROUTE DATA', data);
+            this.structures = data.structures;
+            this.config = data.config;
+            if (this.structures.length === 1 && !this.structures[0].children) {
+                this.currentStructure = this.structures[0];
+            }
+        }));
 
         this.subscriptions.add(this.route.children[0].params.subscribe(params => {
             const structureId = params.structureId;
@@ -51,9 +55,6 @@ export class NavComponent extends OdeComponent implements OnInit, OnDestroy {
             }
         }));
 
-        this.subscriptions.add(this.route.data.subscribe((data: Data) => {
-            this.config = data.config;
-        }));
     }
 
     public openReports(): void {

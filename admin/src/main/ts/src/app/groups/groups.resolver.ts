@@ -1,3 +1,6 @@
+import { map, tap } from 'rxjs/operators';
+import { GroupsServiceService } from './../api/groups-service.service';
+import { Observable, of } from 'rxjs';
 import {Injectable} from '@angular/core';
 import {ActivatedRouteSnapshot, Resolve} from '@angular/router';
 
@@ -9,7 +12,7 @@ import {SpinnerService} from 'ngx-ode-ui';
 @Injectable()
 export class GroupsResolver implements Resolve<GroupModel[]> {
 
-    constructor(private spinner: SpinnerService) {
+    constructor(private spinner: SpinnerService, private groupsService: GroupsServiceService ) {
     }
 
     resolve(route: ActivatedRouteSnapshot): Promise<GroupModel[]> {
@@ -19,17 +22,10 @@ export class GroupsResolver implements Resolve<GroupModel[]> {
         if (currentStructure.groups.data.length > 0) {
             return Promise.resolve(currentStructure.groups.data);
         } else {
-            const p = new Promise<GroupModel[]> (
-                (resolve, reject) => {
-                    currentStructure.groups.sync()
-                .then(() => {
-                    resolve(currentStructure.groups.data);
-                }, error => {
-                    reject(error);
-                });
-                }
-            );
-            return this.spinner.perform('portal-content', p);
+
+        const obs = this.groupsService.get(currentStructure).pipe(tap((res) => { console.log('res', res)}), map( () => currentStructure.groups.data));
+
+        return this.spinner.perform('portal-content', obs.toPromise());
         }
     }
 }

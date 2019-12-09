@@ -1,6 +1,8 @@
+import { map, catchError } from 'rxjs/operators';
+import { ConnectorService } from './../../../api/connector.service';
 import {Injectable} from '@angular/core';
 import {ActivatedRouteSnapshot, Resolve, Router} from '@angular/router';
-
+import { throwError } from 'rxjs';
 import {globalStore} from '../../../core/store/global.store';
 import {RoleModel} from '../../../core/store/models/role.model';
 import { SpinnerService } from 'ngx-ode-ui';
@@ -13,10 +15,11 @@ export class ConnectorRolesResolver implements Resolve<RoleModel[]|Boolean> {
     constructor(
         private spinner: SpinnerService,
         private router: Router,
+        private connectorService: ConnectorService,
         private ns: NotifyService
     ) { }
 
-    resolve(route: ActivatedRouteSnapshot): Promise<RoleModel[]|Boolean> {
+    resolve(route: ActivatedRouteSnapshot): Promise<any> {
         const structure = globalStore.structures.data.find(
             s => s.id === routing.getParam(route, 'structureId'));
         const connectorId = route.params.connectorId;
@@ -25,12 +28,14 @@ export class ConnectorRolesResolver implements Resolve<RoleModel[]|Boolean> {
         if (!targetConnector) {
             this.router.navigate(['/admin', structure._id, 'services', 'connectors']);
         } else {
-            return this.spinner.perform('portal-content', targetConnector.syncRoles(structure._id, connectorId)
-                .then(() => targetConnector.roles)
-                .catch(error => {
-                    this.ns.error('user.root.error.text', 'user.root.error', error);
-                    return false;
+            return this.spinner.perform('portal-content', this.connectorService.syncRoles(targetConnector, structure)
+            .pipe(
+                map(() => targetConnector.roles),
+                catchError(err => {
+                    this.ns.error('user.root.error.text', 'user.root.error', err);
+                    return throwError(err);
                 })
+            ).toPromise()
             );
         }
     }

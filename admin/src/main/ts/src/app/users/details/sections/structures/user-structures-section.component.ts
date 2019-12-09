@@ -1,3 +1,5 @@
+import { catchError, tap } from 'rxjs/operators';
+import { UserService } from './../../../../api/user.service';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, OnInit} from '@angular/core';
 
 import {AbstractSection} from '../abstract.section';
@@ -5,6 +7,7 @@ import { StructureModel } from 'src/app/core/store/models/structure.model';
 import { SpinnerService } from 'ngx-ode-ui';
 import { NotifyService } from 'src/app/core/services/notify.service';
 import { globalStore } from 'src/app/core/store/global.store';
+import { Observable, throwError } from 'rxjs';
 
 @Component({
     selector: 'ode-user-structures-section',
@@ -27,7 +30,8 @@ export class UserStructuresSectionComponent extends AbstractSection implements O
 
     constructor(public spinner: SpinnerService,
                 private ns: NotifyService,
-                protected cdRef: ChangeDetectorRef) {
+                protected cdRef: ChangeDetectorRef,
+                public userService: UserService) {
         super();
     }
 
@@ -57,8 +61,10 @@ export class UserStructuresSectionComponent extends AbstractSection implements O
     }
 
     addStructure = (structure) => {
-        this.spinner.perform('portal-content', this.user.addStructure(structure.id)
-            .then(() => {
+        this.spinner.perform('portal-content', this.userService.addStructure(this.user, structure.id)
+        .pipe(
+
+            tap (() => {
                 this.ns.success(
                     {
                         key: 'notify.user.add.structure.content',
@@ -66,11 +72,10 @@ export class UserStructuresSectionComponent extends AbstractSection implements O
                             structure:  structure.name
                         }
                     }, 'notify.user.add.structure.title');
-
                 this.updateLightboxStructures();
                 this.cdRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError( (err: any) => {
                 this.ns.error(
                     {
                         key: 'notify.user.add.structure.error.content',
@@ -78,13 +83,15 @@ export class UserStructuresSectionComponent extends AbstractSection implements O
                             structure:  structure.name
                         }
                     }, 'notify.user.add.structure.error.title', err);
+                return throwError(err);
             })
-        );
+        ).toPromise());
     }
 
     removeStructure = (structure) => {
-        this.spinner.perform('portal-content', this.user.removeStructure(structure.id)
-            .then(() => {
+        this.spinner.perform('portal-content', this.userService.removeStructure(this.user, structure.id)
+        .pipe(
+            tap(() => {
                 this.ns.success(
                     {
                         key: 'notify.user.remove.structure.content',
@@ -95,8 +102,8 @@ export class UserStructuresSectionComponent extends AbstractSection implements O
 
                 this.updateLightboxStructures();
                 this.cdRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error(
                     {
                         key: 'notify.user.remove.structure.error.content',
@@ -104,7 +111,8 @@ export class UserStructuresSectionComponent extends AbstractSection implements O
                             structure:  structure.name
                         }
                     }, 'notify.user.remove.structure.error.title', err);
+                return throwError(err);
             })
-        );
-    }
+        ).toPromise() );
+     }
 }

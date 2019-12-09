@@ -1,13 +1,13 @@
+import { Classe } from 'src/app/core/store/models/user.model';
 import {Model} from 'entcore-toolkit';
 import { UserCollection } from '../collections/user.collection';
 import { GroupCollection } from '../collections/group.collection';
 import { ApplicationCollection } from '../collections/application.collection';
 import { ConnectorCollection } from '../collections/connector.collection';
-
-export class StructureModel extends Model<StructureModel> {
+export class StructureModel {
 
     constructor() {
-        super({});
+        // super({});
         this.users = new UserCollection();
         this.groups = new GroupCollection();
         this.applications = new ApplicationCollection();
@@ -43,49 +43,49 @@ export class StructureModel extends Model<StructureModel> {
     levelsOfEducation: number[];
     distributions: string[];
 
-    quickSearchUsers(input: string) {
-        return this.http.get(`/directory/structure/${this.id}/quicksearch/users`, {
-            params: {input}
-        });
-    }
+    // quickSearchUsers(input: string) {
+    //     return this.http.get(`/directory/structure/${this.id}/quicksearch/users`, {
+    //         params: {input}
+    //     });
+    // }
 
-    syncClasses(force?: boolean) {
-        if (this.classes.length < 1 || force === true) {
-            return this.http.get('/directory/class/admin/list', {params: {structureId: this.id}})
-                .then(res => this.classes = res.data);
-        }
-        return Promise.resolve();
-    }
+    // syncClasses(force?: boolean) {
+    //     if (this.classes.length < 1 || force === true) {
+    //         return this.http.get('/directory/class/admin/list', {params: {structureId: this.id}})
+    //             .then(res => this.classes = res.data);
+    //     }
+    //     return Promise.resolve();
+    // }
 
-    syncGroups(force?: boolean) {
-        if (this.groups.data.length < 1 || force === true) {
-            return this.groups.sync().then(() => Promise.resolve(this.groups));
-        }
-        return Promise.resolve();
-    }
+    // syncGroups(force?: boolean) {
+    //     if (this.groups.data.length < 1 || force === true) {
+    //         return this.groups.sync().then(() => Promise.resolve(this.groups));
+    //     }
+    //     return Promise.resolve();
+    // }
 
-    syncSources(force?: boolean) {
-        if (this.sources.length < 1 || force === true) {
-            return this.http.get(`/directory/structure/${this.id}/sources`)
-                .then(res => {
-                    if (res.data && res.data.length > 0) {
-                        this.sources = res.data[0].sources;
-                    }
-                });
-        }
-        return Promise.resolve();
-    }
+    // syncSources(force?: boolean) {
+    //     if (this.sources.length < 1 || force === true) {
+    //         return this.http.get(`/directory/structure/${this.id}/sources`)
+    //             .then(res => {
+    //                 if (res.data && res.data.length > 0) {
+    //                     this.sources = res.data[0].sources;
+    //                 }
+    //             });
+    //     }
+    //     return Promise.resolve();
+    // }
 
-    syncAafFunctions(force?: boolean) {
-        if (this.aafFunctions.length < 1 || force === true) {
-            return this.http.get(`/directory/structure/${this.id}/aaffunctions`)
-                .then(res => {
-                    if (res.data && res.data.length > 0
-                        && res.data[0].aafFunctions && res.data[0].aafFunctions.length > 0) {
-                        this.aafFunctions = res.data[0].aafFunctions;
-                    }
-                });
-        }
-        return Promise.resolve();
-    }
+    // syncAafFunctions(force?: boolean) {
+    //     if (this.aafFunctions.length < 1 || force === true) {
+    //         return this.http.get(`/directory/structure/${this.id}/aaffunctions`)
+    //             .then(res => {
+    //                 if (res.data && res.data.length > 0
+    //                     && res.data[0].aafFunctions && res.data[0].aafFunctions.length > 0) {
+    //                     this.aafFunctions = res.data[0].aafFunctions;
+    //                 }
+    //             });
+    //     }
+    //     return Promise.resolve();
+    // }
 }

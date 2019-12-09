@@ -1,6 +1,7 @@
+import { OdeHttpClient } from './../core/ode/OdeHttpClient';
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {UserOverview} from './user-overview/user-overview.component';
+import {UserOverview} from '../users/user-overview/user-overview.component';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
 
@@ -35,11 +36,11 @@ export interface BackendDirectoryUserResponse {
 @Injectable()
 export class UsersService {
 
-    constructor(private http: HttpClient) {
+    constructor(private httpClient: OdeHttpClient) {
     }
 
     public fetch(userId: string): Observable<UserOverview> {
-        return this.http.get<BackendDirectoryUserResponse>(`/directory/user/${userId}?manual-groups=true`)
+        return this.httpClient.Get<BackendDirectoryUserResponse>(`/directory/user/${userId}?manual-groups=true`)
         .pipe(
             map((res: BackendDirectoryUserResponse): UserOverview => ({
                 activationCode: res.activationCode,
@@ -55,4 +56,8 @@ export class UsersService {
             }))
         );
     }
+
+    
+
+
 }

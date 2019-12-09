@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {ActivatedRouteSnapshot, Resolve, RouterStateSnapshot} from '@angular/router';
-import {Observable} from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import {map} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import { InternalCommunicationRule } from 'src/app/core/store/models/group.model';
@@ -26,7 +26,7 @@ export class GroupInternalCommunicationRuleResolver implements Resolve<GroupIdAn
 
     resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<GroupIdAndInternalCommunicationRule> {
         if (!route.paramMap.has('groupId')) {
-            return Observable.throw(new Error('no groupId'));
+            return throwError(new Error('no groupId'));
         }
 
         return this.http.get<CommunicationGroupResponse>(`/communication/group/${route.paramMap.get('groupId')}`)

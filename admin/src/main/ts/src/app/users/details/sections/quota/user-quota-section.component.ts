@@ -1,3 +1,4 @@
+import { UserService } from './../../../../api/user.service';
 import {ChangeDetectorRef, Component, Input, OnInit} from '@angular/core';
 import {AbstractSection} from '../abstract.section';
 import {HttpClient} from '@angular/common/http';
@@ -32,6 +33,7 @@ export class UserQuotaSectionComponent extends AbstractSection implements OnInit
 
     constructor(private http: HttpClient,
                 private ns: NotifyService,
+                private userService: UserService,
                 private cdRef: ChangeDetectorRef) {
         super();
     }
@@ -45,12 +47,10 @@ export class UserQuotaSectionComponent extends AbstractSection implements OnInit
 
     protected onUserChange(): void {
         if (!this.details.storage && this.details.storage != 0) {
-            this.http.get<UsedSpace>(`/workspace/quota/user/${this.user.id}`).subscribe((data: UsedSpace) => {
-                this.details.storage = data.storage;
-                this.details.quota = data.quota;
+            
+            this.userService.getQuota(this.user).subscribe(() => {
                 this.initData();
             });
-        } else {
             this.initData();
         }
     }

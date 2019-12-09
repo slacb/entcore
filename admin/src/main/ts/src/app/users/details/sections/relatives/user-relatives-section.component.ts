@@ -1,10 +1,13 @@
+import { tap, catchError } from 'rxjs/operators';
+import { UserDetailsService } from './../../../../api/user-details.service';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, OnInit} from '@angular/core';
-
+import { throwError } from 'rxjs';
 import {AbstractSection} from '../abstract.section';
 import {UserModel} from '../../../../core/store/models/user.model';
 import { UserListService } from 'src/app/core/services/userlist.service';
 import { SpinnerService } from 'ngx-ode-ui';
 import { NotifyService } from 'src/app/core/services/notify.service';
+import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 @Component({
     selector: 'ode-user-relatives-section',
@@ -20,6 +23,7 @@ export class UserRelativesSectionComponent extends AbstractSection implements On
 
     constructor(
         public userListService: UserListService,
+        private userDetailsService: UserDetailsService,
         public spinner: SpinnerService,
         private ns: NotifyService,
         protected cdRef: ChangeDetectorRef) {
@@ -54,8 +58,10 @@ export class UserRelativesSectionComponent extends AbstractSection implements On
     }
 
     addRelative = (relative) => {
-        this.spinner.perform('portal-content', this.details.addRelative(relative)
-            .then(() => {
+        
+        this.spinner.perform('portal-content', this.userDetailsService.addRelative(this.details, relative)
+        .pipe(
+            tap(() => {
                 this.ns.success(
                     {
                         key: 'notify.user.add.relative.content',
@@ -66,8 +72,8 @@ export class UserRelativesSectionComponent extends AbstractSection implements On
 
                 this.updateLightboxRelatives();
                 this.cdRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error(
                     {
                         key: 'notify.user.add.relative.error.content',
@@ -75,13 +81,15 @@ export class UserRelativesSectionComponent extends AbstractSection implements On
                             relative:  relative.displayName
                         }
                     }, 'notify.user.add.relative.error.title', err);
+                return throwError(err);
             })
-        );
+        ).toPromise());
     }
 
     removeRelative = (relative) => {
-        this.spinner.perform('portal-content', this.details.removeRelative(relative)
-            .then(() => {
+        this.spinner.perform('portal-content', this.userDetailsService.removeRelative(this.details, relative)
+        .pipe(
+            tap(() => {
                 this.ns.success(
                     {
                         key: 'notify.user.remove.relative.content',
@@ -92,8 +100,8 @@ export class UserRelativesSectionComponent extends AbstractSection implements On
 
                 this.updateLightboxRelatives();
                 this.cdRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.ns.error(
                     {
                         key: 'notify.user.remove.relative.error.content',
@@ -101,7 +109,8 @@ export class UserRelativesSectionComponent extends AbstractSection implements On
                             relative:  relative.displayName
                         }
                     }, 'notify.user.remove.relative.error.title', err);
+                return throwError(err);
             })
-        );
+        ).toPromise());
     }
 }

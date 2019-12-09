@@ -1,3 +1,6 @@
+import { UserService } from './../../../../api/user.service';
+import { convertToParamMap } from '@angular/router';
+import { catchError, tap } from 'rxjs/operators';
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit} from '@angular/core';
 
 import {AbstractSection} from '../abstract.section';
@@ -6,6 +9,7 @@ import { UserModel } from 'src/app/core/store/models/user.model';
 import { SpinnerService } from 'ngx-ode-ui';
 import { StructureModel } from 'src/app/core/store/models/structure.model';
 import { NotifyService } from 'src/app/core/services/notify.service';
+import { throwError } from 'rxjs';
 
 @Component({
     selector: 'ode-user-manualgroups-section',
@@ -26,6 +30,7 @@ export class UserManualgroupsSectionComponent extends AbstractSection implements
     constructor(
         public spinner: SpinnerService,
         private notifyService: NotifyService,
+        private userService: UserService,
         private changeDetectorRef: ChangeDetectorRef) {
         super();
     }
@@ -68,8 +73,9 @@ export class UserManualgroupsSectionComponent extends AbstractSection implements
     }
 
     addGroup = (group) => {
-        return this.spinner.perform('portal-content', this.user.addManualGroup(group)
-            .then(() => {
+        return this.spinner.perform('portal-content', this.userService.addManualGroup(this.user, group)
+        .pipe(
+            tap(() => {
                 this.notifyService.success(
                     {
                         key: 'notify.user.add.group.content',
@@ -81,8 +87,8 @@ export class UserManualgroupsSectionComponent extends AbstractSection implements
                 this.updateLightboxManualGroups();
                 this.filterManageableGroups();
                 this.changeDetectorRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.notifyService.error(
                     {
                         key: 'notify.user.add.group.error.content',
@@ -90,13 +96,15 @@ export class UserManualgroupsSectionComponent extends AbstractSection implements
                             group: group.name
                         }
                     }, 'notify.user.add.group.error.title', err);
+                return throwError(err);
             })
-        );
+        ).toPromise());
     }
 
     removeGroup = (group) => {
-        return this.spinner.perform('portal-content', this.user.removeManualGroup(group)
-            .then(() => {
+        return this.spinner.perform('portal-content', this.userService.removeManualGroup(this.user, group)
+        .pipe(
+            tap(() => {
                 this.notifyService.success(
                     {
                         key: 'notify.user.remove.group.content',
@@ -108,8 +116,8 @@ export class UserManualgroupsSectionComponent extends AbstractSection implements
                 this.updateLightboxManualGroups();
                 this.filterManageableGroups();
                 this.changeDetectorRef.markForCheck();
-            })
-            .catch(err => {
+            }),
+            catchError(err => {
                 this.notifyService.error(
                     {
                         key: 'notify.user.remove.group.error.content',
@@ -117,7 +125,9 @@ export class UserManualgroupsSectionComponent extends AbstractSection implements
                             group: group.name
                         }
                     }, 'notify.user.remove.group.error.title', err);
+                return throwError(err);
             })
+        ).toPromise()
         );
     }
 

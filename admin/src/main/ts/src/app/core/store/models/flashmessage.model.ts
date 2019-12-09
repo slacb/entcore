@@ -1,6 +1,6 @@
 import {Model} from 'entcore-toolkit';
 
-export class FlashMessageModel extends Model<FlashMessageModel> {
+export class FlashMessageModel {
 
 
 
@@ -20,7 +20,7 @@ export class FlashMessageModel extends Model<FlashMessageModel> {
     subStructures?: string[];
 
     constructor() {
-        super({});
+        // super({});
         this.profiles = [];
         this.subStructures = [];
         this.contents = {};

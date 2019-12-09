@@ -16,7 +16,7 @@ export class StructureCollection extends Collection<StructureModel> {
         const referenceSet = new Set<string>(this.data.map(s => s.id));
         this.data.forEach(structure => {
             structure.parents && structure.parents.forEach(parent => {
-                childrenMap.has(parent.id) ?
+                    childrenMap.has(parent.id) ?
                     childrenMap.get(parent.id).push(structure) :
                     childrenMap.set(parent.id, [structure]);
             });
