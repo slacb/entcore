@@ -15,7 +15,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-import { ng, template, idiom as lang, notify, idiom, moment, workspace } from 'entcore';
+import { ng, template, idiom as lang, notify, idiom, moment, workspace, model } from 'entcore';
 import { NavigationDelegateScope, NavigationDelegate } from './delegates/navigation';
 import { ActionDelegate, ActionDelegateScope } from './delegates/actions';
 import { TreeDelegate, TreeDelegateScope } from './delegates/tree';
@@ -159,6 +159,11 @@ export let workspaceController = ng.controller('Workspace', ['$scope', '$rootSco
 		const items = $scope.selectedItems();
 		if (!workspaceService.isActionAvailable(type, items)) {
 			return false;
+		}
+		//move only allowed for owners
+		if(type == "move"){
+			const notMine = items.filter(i=>i.owner.userId != model.me.userId);
+			if(notMine.length > 0) return false;
 		}
 		return true
 	}

@@ -1,4 +1,4 @@
-import { template, notify } from "entcore";
+import { template, notify, model } from "entcore";
 import { models, workspaceService } from "../services";
 
 export interface DragDelegateScope {
@@ -139,6 +139,12 @@ export function DragDelegate($scope: DragDelegateScope) {
             const fileIds = draggingItems.map(item => item._id);
             if (!isTree && targetItem.isShared && !targetItem.canCopyFileIdsInto(fileIds)) {
                 notifyError && notify.error("workspace.contrib.cant")
+                return false;
+            }
+            //cannot drop if i am not owner (but allow trash)
+            const notMine = draggingItems.filter(item=>item.owner.userId != model.me.userId);
+            const notTrash = !isTree || tree.filter != "trash";
+            if(notMine.length > 0 && notTrash){
                 return false;
             }
             //else accept
