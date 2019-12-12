@@ -587,6 +587,21 @@ public class UserUtils {
 	}
 
 	public static void addSessionAttribute(EventBus eb, String userId,
+	String key, String value, final Handler<Boolean> handler) {
+		addSessionAttribute(eb, userId, key, (Object) value, handler);
+	}
+
+	public static void addSessionAttribute(EventBus eb, String userId,
+	String key, Long value, final Handler<Boolean> handler) {
+		addSessionAttribute(eb, userId, key, (Object) value, handler);
+	}
+
+	public static void addSessionAttribute(EventBus eb, String userId,
+	String key, JsonObject value, final Handler<Boolean> handler) {
+		addSessionAttribute(eb, userId, key, (Object) value, handler);
+	}
+
+	private static void addSessionAttribute(EventBus eb, String userId,
 			String key, Object value, final Handler<Boolean> handler) {
 		JsonObject json = new JsonObject()
 				.put("action", "addAttribute")
