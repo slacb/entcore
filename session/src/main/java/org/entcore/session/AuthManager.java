@@ -35,7 +35,7 @@ import static fr.wseduc.webutils.Utils.getOrElse;
 
 public class AuthManager extends BusModBase implements Handler<Message<JsonObject>> {
 
-	private static final String SESSIONS_COLLECTION = "sessions";
+	public static final String SESSIONS_COLLECTION = "sessions";
 
 	protected MongoDb mongo;
 	protected Neo4j neo4j;

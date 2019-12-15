@@ -18,10 +18,18 @@
 
 package org.entcore.session;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import fr.wseduc.mongodb.MongoDb;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.core.impl.VertxInternal;
+
+import static fr.wseduc.webutils.Utils.getOrElse;
 
 public abstract class AbstractSessionStore implements SessionStore {
 
@@ -29,9 +37,22 @@ public abstract class AbstractSessionStore implements SessionStore {
     protected final long sessionTimeout;
     protected final long prolongedSessionTimeout;
     protected final Vertx vertx;
+    protected Map<String, Long> inactivity;
 
-    public AbstractSessionStore(Vertx vertx, JsonObject config) {
+    public AbstractSessionStore(Vertx vertx, JsonObject config, Boolean cluster) {
         this.vertx = vertx;
+
+        if (Boolean.TRUE.equals(cluster)) {
+            final ClusterManager cm = ((VertxInternal) vertx).getClusterManager();
+            if (getOrElse(config.getBoolean("inactivity"), false)) {
+                inactivity = cm.getSyncMap("inactivity");
+                logger.info("inactivity ha map : " + inactivity.getClass().getName());
+            }
+        } else {
+            if (getOrElse(config.getBoolean("inactivity"), false)) {
+                inactivity = new HashMap<>();
+            }
+        }
 
         Object timeout = config.getValue("session_timeout");
 		if (timeout != null) {
@@ -57,6 +78,42 @@ public abstract class AbstractSessionStore implements SessionStore {
 		} else {
 			this.prolongedSessionTimeout = 20 * DEFAULT_SESSION_TIMEOUT;
 		}
+    }
+
+    protected long setTimer(final String userId, final String sessionId, final boolean secureLocation) {
+        if (inactivity != null) {
+            inactivity.put(sessionId, System.currentTimeMillis());
+        }
+        return setTimer(userId, sessionId, sessionTimeout, secureLocation);
+    }
+
+    protected long setTimer(final String userId, final String sessionId, final long sessionTimeout,
+            final boolean secureLocation) {
+        return vertx.setTimer(sessionTimeout, timerId -> {
+            if (inactivity != null) {
+                final Long lastActivity = inactivity.get(sessionId);
+                if (lastActivity != null) {
+                    final long timeoutTimestamp = lastActivity
+                            + (secureLocation ? prolongedSessionTimeout : sessionTimeout);
+                    final long now = System.currentTimeMillis();
+                    if (timeoutTimestamp > now) {
+                        setTimer(userId, sessionId, (timeoutTimestamp - now), secureLocation);
+                    } else {
+                        dropSession(sessionId, null);
+                    }
+                } else {
+                    dropSession(sessionId, null);
+                }
+            } else {
+                removeCacheSession(userId, sessionId);
+            }
+        });
+    }
+
+    protected abstract void removeCacheSession(String userId, String sessionId);
+
+    protected void dropMongoDbSession(String sessionId) {
+        MongoDb.getInstance().delete(AuthManager.SESSIONS_COLLECTION, new JsonObject().put("_id", sessionId));
     }
 
 }

@@ -39,7 +39,6 @@ public class MapSessionStore extends AbstractSessionStore {
 
     protected Map<String, String> sessions;
     protected Map<String, List<LoginInfo>> logins;
-    protected Map<String, Long> inactivity;
 
     private static final class LoginInfo implements Serializable {
         final long timerId;
@@ -52,7 +51,7 @@ public class MapSessionStore extends AbstractSessionStore {
     }
 
     public MapSessionStore(final Vertx vertx, final Boolean cluster, JsonObject config) {
-        super(vertx, config);
+        super(vertx, config, cluster);
         if (Boolean.TRUE.equals(cluster)) {
             final ClusterManager cm = ((VertxInternal) vertx).getClusterManager();
             sessions = cm.getSyncMap("sessions");
@@ -114,36 +113,6 @@ public class MapSessionStore extends AbstractSessionStore {
         }
     }
 
-    protected long setTimer(final String userId, final String sessionId, final boolean secureLocation) {
-        if (inactivity != null) {
-            inactivity.put(sessionId, System.currentTimeMillis());
-        }
-        return setTimer(userId, sessionId, sessionTimeout, secureLocation);
-    }
-
-    protected long setTimer(final String userId, final String sessionId, final long sessionTimeout,
-            final boolean secureLocation) {
-        return vertx.setTimer(sessionTimeout, timerId -> {
-            if (inactivity != null) {
-                final Long lastActivity = inactivity.get(sessionId);
-                if (lastActivity != null) {
-                    final long timeoutTimestamp = lastActivity
-                            + (secureLocation ? prolongedSessionTimeout : sessionTimeout);
-                    final long now = System.currentTimeMillis();
-                    if (timeoutTimestamp > now) {
-                        setTimer(userId, sessionId, (timeoutTimestamp - now), secureLocation);
-                    } else {
-                        dropSession(sessionId, null);
-                    }
-                } else {
-                    dropSession(sessionId, null);
-                }
-            } else {
-                logins.remove(userId);
-                sessions.remove(sessionId);
-            }
-        });
-    }
 
     @Override
     public void getSessionByUserId(String userId, Handler<AsyncResult<JsonObject>> handler) {
@@ -258,6 +227,7 @@ public class MapSessionStore extends AbstractSessionStore {
         }
         if (inactivity != null) {
             inactivity.remove(sessionId);
+            dropMongoDbSession(sessionId);
         }
 
     }
@@ -336,6 +306,12 @@ public class MapSessionStore extends AbstractSessionStore {
         } catch (SessionException e) {
             handler.handle(Future.failedFuture(new SessionException("Session not found when update drop attribute: " + userId)));
         }
+    }
+
+    @Override
+    protected void removeCacheSession(String userId, String sessionId) {
+        logins.remove(userId);
+        sessions.remove(sessionId);
     }
 
 }
