@@ -40,6 +40,7 @@ public class AuthManager extends BusModBase implements Handler<Message<JsonObjec
 	protected MongoDb mongo;
 	protected Neo4j neo4j;
 	protected SessionStore sessionStore;
+	protected Boolean cluster;
 
 	public void start() {
 		super.start();
@@ -49,7 +50,7 @@ public class AuthManager extends BusModBase implements Handler<Message<JsonObjec
 		neo4j = Neo4j.getInstance();
 		neo4j.init(vertx, new JsonObject(neo4jConfig));
 
-		Boolean cluster = (Boolean) server.get("cluster");
+		cluster = (Boolean) server.get("cluster");
 		String node = (String) server.get("node");
 		mongo = MongoDb.getInstance();
 		mongo.init(vertx.eventBus(), node + config.getString("mongo-address", "wse.mongodb.persistor"));
