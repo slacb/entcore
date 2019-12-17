@@ -31,6 +31,8 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -41,6 +43,7 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class UserUtils {
 
+	private static final Logger log = LoggerFactory.getLogger(UserUtils.class);
 	private static final String COMMUNICATION_USERS = "wse.communication.users";
 	private static final String DIRECTORY = "directory";
 	private static final String SESSION_ADDRESS = "wse.session";
@@ -406,6 +409,7 @@ public class UserUtils {
 
 	private static void findSession(EventBus eb, final HttpServerRequest request, JsonObject findSession, final boolean paused,
 			final Handler<JsonObject> handler) {
+		final long startSessionTime = System.currentTimeMillis();
 		eb.send(SESSION_ADDRESS, findSession, new Handler<AsyncResult<Message<JsonObject>>>() {
 
 			@Override
@@ -425,6 +429,10 @@ public class UserUtils {
 					}
 				} else {
 					handler.handle(null);
+				}
+				final long timeGetSessionDelay = System.currentTimeMillis() - startSessionTime;
+				if (timeGetSessionDelay > 100) {
+					log.info("Find session time : " + timeGetSessionDelay + " ms.");
 				}
 			}
 		});
@@ -596,6 +604,7 @@ public class UserUtils {
 		addSessionAttribute(eb, userId, key, (Object) value, handler);
 	}
 
+	@Deprecated
 	public static void addSessionAttribute(EventBus eb, String userId,
 	String key, JsonObject value, final Handler<Boolean> handler) {
 		addSessionAttribute(eb, userId, key, (Object) value, handler);
@@ -608,12 +617,17 @@ public class UserUtils {
 				.put("userId", userId)
 				.put("key", key)
 				.put("value", value);
+		final long startAddAttrSessionTime = System.currentTimeMillis();
 		eb.send(SESSION_ADDRESS, json, new Handler<AsyncResult<Message<JsonObject>>>() {
 
 			@Override
 			public void handle(AsyncResult<Message<JsonObject>> res) {
 				if (handler != null) {
 					handler.handle(res.succeeded() && "ok".equals(res.result().body().getString("status")));
+				}
+				final long timeAddAttrSessionDelay = System.currentTimeMillis() - startAddAttrSessionTime;
+				if (timeAddAttrSessionDelay > 100) {
+					log.info("Add session attribute time : " + timeAddAttrSessionDelay + " ms.");
 				}
 			}
 		});
