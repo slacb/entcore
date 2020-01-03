@@ -1,8 +1,10 @@
+@import "../../../assets/variables";
+
 .alertes-list-button-history {
-    color: white;
-    border: 1px solid rgb(255, 131, 82);
-    background-color: rgb(255, 131, 82);
+    color: $white;
+    border: 1px solid $accent;
+    background-color: $accent;
     &:hover:not(:disabled) {
-      background-color: darken(rgb(255, 131, 82), 5%);
+      background-color: $accent-dark;
     }
 }

@@ -1,3 +1,5 @@
+@import "../../../assets/variables";
+
 :host {
   display: flex;
   flex: 1;
@@ -8,7 +10,7 @@ user-overview {
   margin: 10px;
 }
 .users-comparison__separator {
-  background: black;
+  background: $black;
   width: 1px;
   margin: 10px;
 }

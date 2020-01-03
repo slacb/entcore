@@ -1,0 +1,17 @@
+@import "../../../../../assets/variables";
+
+button.tab {
+    border-left: 0;
+    box-shadow: none;
+    border-right: 0;
+    border-top: 0;
+    margin: 0 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+button.tab:not(active):hover {
+    color: $accent;
+    background-color: $white;
+    border-bottom-color: $accent;
+}

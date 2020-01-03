@@ -10,23 +10,7 @@ import { ServicesStore } from '../../../services.store';
 @Component({
     selector: 'ode-smart-application',
     templateUrl: './smart-application.component.html',
-    styles: [`
-        button.tab {
-            border-left: 0;
-            box-shadow: none;
-            border-right: 0;
-            border-top: 0;
-            margin: 0 10px;
-            padding-left: 10px;
-            padding-right: 10px;
-        }
-    `, `
-        button.tab:not(active):hover {
-            color: #ff8352;
-            background-color: #fff;
-            border-bottom-color: #ff8352;
-        }
-    `]
+    styleUrls: ['./smart-application.component.scss']
 })
 export class SmartApplicationComponent extends OdeComponent implements OnInit, OnDestroy {
     public currentTab: 'assignment' | 'massAssignment' = 'assignment';

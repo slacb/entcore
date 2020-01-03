@@ -1,5 +1,7 @@
+@import "../../../assets/variables";
+
 .block-profiles-table {width: auto;}
 .block-profiles-table-line:hover {background-color: unset;}
 .block-profiles-table-profileCell {min-width: 120px;}
-.block-profiles-warning_icon {color: indianred; font-size: 1.5em;}
+.block-profiles-warning_icon {color: $contrast; font-size: 1.5em;}
 .block-profiles-warning_text {font-weight: bold;}

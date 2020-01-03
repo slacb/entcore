@@ -1,7 +1,9 @@
+@import "../../../assets/variables";
+
 .alerte-report-action__delete {
-    color: indianred;
+    color: $contrast;
 }
 
 .alerte-report-action__keep {
-    color: mediumseagreen;
+    color: $validate;
 }

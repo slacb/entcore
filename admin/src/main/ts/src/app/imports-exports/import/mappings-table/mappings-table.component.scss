@@ -1,4 +1,6 @@
+@import "../../../../assets/variables";
+
 td:first-of-type + td { font-weight : bold; }
-td:first-of-type + td:hover { border: 2px dashed orange; cursor:pointer; }
+td:first-of-type + td:hover { border: 2px dashed $accent; cursor:pointer; }
 col:last-child { width: 30px; }
 td:last-child { font-size : 1.5em; white-space: normal; }

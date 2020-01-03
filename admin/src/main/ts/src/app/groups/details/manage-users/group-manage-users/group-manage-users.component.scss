@@ -1,3 +1,5 @@
+@import "../../../../../assets/variables";
+
 .group-manage-users-container {
     display: flex;
     align-items: center;
@@ -26,10 +28,10 @@
     margin-right: 5px;
     font-size: 1.5em;
     &:not(:disabled) {
-        background-color: rgb(255, 131, 82);
-        color: #fff;
+        background-color: $accent;
+        color: $white;
         &:hover {
-            background-color: darken(rgb(255, 131, 82), 5%);
+            background-color: $accent-dark;
         }
     }
 }
@@ -44,11 +46,11 @@
     margin-right: 5px;
     font-size: 1.5em;
     &:not(:disabled) {
-        background-color: indianred;
-        color: #fff;
+        background-color: $contrast;
+        color: $white;
         &:hover {
-            background-color: darken(indianred, 5%);
-            border-color: darken(indianred, 10%);
+            background-color: $contrast-hover;
+            border-color: $contrast-hover;
         }
     }
 }

@@ -8,43 +8,7 @@ import { CasType } from '../CasType';
 @Component({
     selector: 'ode-connector-properties',
     templateUrl: './connector.properties.component.html',
-    styles: [`
-        .connector-properties__action {
-            display: flex;
-            justify-content: flex-end;
-            padding: 20px 10px 10px 10px;
-        }
-    `, `
-        .connector-properties__action--cancel {
-            min-width: 80px;
-            text-align: center;
-        }
-    `, `
-        .connector-properties__action--submit {
-            margin-left: 5px;
-            min-width: 80px;
-            text-align: center;
-        }
-    `, `
-        .connector-properties-warning {
-            padding: 0px 15px;
-        }
-    `, `
-        .connector-properties-warning__header {
-            color: #ff8352;
-            font-weight: bold;
-        }
-    `, `
-        .connector-properties-warning__content {
-            font-style: italic;
-            font-size: 0.8em;
-        }
-    `, `
-        .connector-properties-cas-casType__description {
-            padding-top: 20px;
-            font-weight: bold;
-        }
-    `]
+    styleUrls: ['./connector.properties.component.scss']
 })
 export class ConnectorPropertiesComponent extends OdeComponent implements OnChanges {
     @Input()

@@ -1,3 +1,5 @@
+@import "../../../assets/variables";
+
 .button.button--back {
   background: none;
   border: 0;
@@ -5,7 +7,7 @@
   font-size: 1.2rem;
 }
 .button.button--back:hover, .button.button--back:hover i {
-  color: #ff5e1f !important;
+  color: $accent !important;
 }
 .button.button--back i {
   float: none;

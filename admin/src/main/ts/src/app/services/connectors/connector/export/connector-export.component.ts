@@ -5,20 +5,7 @@ import { Profile } from '../../../shared/services-types';
 @Component({
     selector: 'ode-connector-export',
     templateUrl: './connector-export.component.html',
-    styles: [`
-        .connector-export {
-            padding: 0 15px 15px 15px;
-        }
-    `, `
-        .connector-export-profile {
-            display: flex;
-            flex-wrap: wrap;
-        }
-    `, `
-        .connector-export-profile__button {
-            margin: 5px 5px;
-        }
-    `]
+    styleUrls: ['./connector-export.component.scss']
 })
 export class ConnectorExportComponent extends OdeComponent {
     @Output()

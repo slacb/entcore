@@ -1,10 +1,12 @@
+@import "../../../../assets/variables";
+
 .lct-communication-rule {cursor: pointer;}
-.lct-communication-rule__can-communicate {color: mediumseagreen;}
-.lct-communication-rule__cannot-communicate {color: indianred;}
+.lct-communication-rule__can-communicate {color: $validate;}
+.lct-communication-rule__cannot-communicate {color: $contrast;}
 .lct-communication-rule__switch {font-size: 22px;}
 .lct-communication-rule__text {font-size: 0.8em;}
 .lct-communication-rule__switch, .lct-communication-rule__text {vertical-align: middle;}
-.lct-communication-rule__can-communicate .lct-communication-rule__switch {color: mediumseagreen;}
-.lct-communication-rule__cannot-communicate .lct-communication-rule__switch {color: indianred;}
+.lct-communication-rule__can-communicate .lct-communication-rule__switch {color: $validate;}
+.lct-communication-rule__cannot-communicate .lct-communication-rule__switch {color: $contrast;}
 .button--with-icon {align-items: center; display: inline-flex;}
 .rename-lightbox__form {min-width: 500px;}

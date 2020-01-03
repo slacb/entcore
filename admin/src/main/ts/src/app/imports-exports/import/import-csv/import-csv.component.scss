@@ -1,3 +1,5 @@
+@import "../../../../assets/variables";
+
 div.pager {padding-top: 10px;}
 a:hover {cursor: pointer;}
 .report-filter {margin: 20px 0;}
@@ -6,9 +8,9 @@ table.report { table-layout: auto; }
 table.report tr.state-delete { background: #fff7dc; }
 table.report tr.is-danger { background: #f7e5e5; }
 table.report tr.is-warning { background: #fff7dc; }
-table.report td.clickable:hover { border: 2px dashed #ff8352; cursor:pointer; }
-table.report td.is-danger { border: 2px dashed indianred; }
-table.report td.is-success { border: 2px dashed mediumseagreen; }
+table.report td.clickable:hover { border: 2px dashed $accent; cursor:pointer; }
+table.report td.is-danger { border: 2px dashed $contrast; }
+table.report td.is-success { border: 2px dashed $validate; }
 table.report td input[disabled] { background : transparent; border:0; cursor:pointer; opacity: 1;}
 table.report td i.fa { padding: 5px; }
 table.report td i.fa-check { font-size: 1.2em; }
