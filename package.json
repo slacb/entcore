@@ -33,7 +33,7 @@
     "underscore": "^1.8.3",
     "core-js": "^2.4.1",
     "@ngtools/webpack": "1.8.5",
-    "axios": "0.15.3",
+    "axios": "0.18.1",
     "entcore-generic-icons": "opendigitaleducation/generic-icons",
     "reflect-metadata": "0.1.10"
   },
