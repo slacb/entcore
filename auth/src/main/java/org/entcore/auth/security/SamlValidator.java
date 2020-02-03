@@ -53,6 +53,8 @@ import org.opensaml.ws.soap.soap11.Envelope;
 import org.opensaml.xml.Configuration;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.encryption.InlineEncryptedKeyResolver;
+import org.opensaml.xml.io.Marshaller;
+import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.parse.BasicParserPool;
 import org.opensaml.xml.schema.XSString;
@@ -1078,6 +1080,9 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		}
 		logoutRequest.setSignature(signature);
 
+		String lr = SamlUtils.marshallLogoutRequest(logoutRequest);
+		logger.info(lr);
+
 		if (signature != null) {
 			Signer.signObject(signature);
 		}
@@ -1087,9 +1092,9 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		Envelope envelope = SamlUtils.buildSAMLObjectWithDefaultName(Envelope.class);
 		envelope.setBody(body);
 
-		final String lr = SamlUtils.marshallEnvelope(envelope);
+		final String envlop = SamlUtils.marshallEnvelope(envelope);
 
-		logger.info(lr);
+		logger.info(envlop);
 
 		// TODO replace by vertx http client
 		BasicSOAPMessageContext soapContext = new BasicSOAPMessageContext();
