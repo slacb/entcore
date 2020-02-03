@@ -175,8 +175,9 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		final String action = message.body().getString("action", "");
 		final String response = message.body().getString("response");
 		final String idp = message.body().getString("IDP");
-		if (!"soap-slo".equals(action) && !"generate-slo-request".equals(action) && !"generate-authn-request".equals(action)
-				&& !"generate-saml-response".equals(action) && (response == null || response.trim().isEmpty())) {
+		if (!"generate-slo-request".equals(action) && !"generate-authn-request".equals(action)
+				&& !"generate-saml-response".equals(action) && !"soap-slo".equals(action) &&
+				(response == null || response.trim().isEmpty())) {
 			sendError(message, "invalid.response");
 			return;
 		}
@@ -1006,9 +1007,11 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 	}
 
 	private void soapSlo(String sessionId, Handler<AsyncResult<Void>> handler) {
+		logger.info("enter soap slo");
 		idpAssertionsStore.retrieve(sessionId, ar -> {
 			if (ar.succeeded()) {
 				final JsonArray a = ar.result();
+				logger.info("retrieve assertions : " + a.encode());
 				final AtomicBoolean error = new AtomicBoolean(false);
 				for (Object o : a) {
 					if (!(o instanceof JsonObject))
@@ -1071,6 +1074,10 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		body.getUnknownXMLObjects().add(logoutRequest);
 		Envelope envelope = SamlUtils.buildSAMLObjectWithDefaultName(Envelope.class);
 		envelope.setBody(body);
+
+		final String lr = SamlUtils.marshallEnvelope(envelope);
+
+		logger.info(lr);
 
 		// TODO replace by vertx http client
 		BasicSOAPMessageContext soapContext = new BasicSOAPMessageContext();
