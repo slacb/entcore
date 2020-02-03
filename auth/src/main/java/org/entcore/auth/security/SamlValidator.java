@@ -66,10 +66,12 @@ import org.opensaml.xml.security.criteria.UsageCriteria;
 import org.opensaml.xml.security.keyinfo.KeyInfoCredentialResolver;
 import org.opensaml.xml.security.keyinfo.StaticKeyInfoCredentialResolver;
 import org.opensaml.xml.security.x509.BasicX509Credential;
+import org.opensaml.xml.signature.KeyInfo;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureConstants;
 import org.opensaml.xml.signature.SignatureTrustEngine;
 import org.opensaml.xml.signature.Signer;
+import org.opensaml.xml.signature.X509Data;
 import org.opensaml.xml.signature.impl.ExplicitKeySignatureTrustEngine;
 import org.opensaml.xml.signature.impl.SignatureBuilder;
 import org.opensaml.xml.util.XMLHelper;
@@ -443,6 +445,10 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 	 * @throws Throwable
 	 */
 	private Signature createSignature() throws Throwable {
+		return createSignature(false);
+	}
+
+	private Signature createSignature(boolean addKeyInfo) throws Throwable {
 		SignatureBuilder builder = new SignatureBuilder();
 		Signature signature = builder.buildObject();
 
@@ -463,6 +469,18 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
 		signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
 
+		if (addKeyInfo) {
+			KeyInfo keyInfo = SamlUtils.buildSAMLObjectWithDefaultName(KeyInfo.class);
+			X509Data data = SamlUtils.buildSAMLObjectWithDefaultName(X509Data.class);
+			org.opensaml.xml.signature.X509Certificate cert =
+					SamlUtils.buildSAMLObjectWithDefaultName(org.opensaml.xml.signature.X509Certificate.class);
+			String value =
+					org.apache.xml.security.utils.Base64.encode(credential.getEntityCertificate().getEncoded());
+			cert.setValue(value);
+			data.getX509Certificates().add(cert);
+			keyInfo.getX509Datas().add(data);
+			signature.setKeyInfo(keyInfo);
+		}
 		return signature;
 	}
 
@@ -1074,7 +1092,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 
 		Signature signature;
 		try {
-			signature = createSignature();
+			signature = createSignature(true);
 		} catch (Throwable e) {
 			throw new Exception("create signature exception", e);
 		}
