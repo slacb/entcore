@@ -29,6 +29,7 @@ import org.entcore.auth.services.SamlServiceProviderFactory;
 import org.entcore.auth.services.SamlVectorService;
 import org.entcore.auth.services.impl.DefaultServiceProviderFactory;
 import org.entcore.auth.services.impl.FrEduVecteurService;
+import org.entcore.auth.services.impl.MongoDBIDPAssertionStore;
 import org.entcore.common.neo4j.Neo4j;
 import org.joda.time.DateTime;
 import org.opensaml.DefaultBootstrap;
@@ -133,6 +134,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		final String node = (String) vertx.sharedData().getLocalMap("server").get("node");
 		if (node != null) {
 			MongoDb.getInstance().init(eb, node + config.getString("mongo-address", "wse.mongodb.persistor"));
+			idpAssertionsStore = new MongoDBIDPAssertionStore();
 		}
 
 		try {
@@ -1076,7 +1078,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		HttpClientBuilder clientBuilder = new HttpClientBuilder();
 		HttpSOAPClient soapClient = new HttpSOAPClient(clientBuilder.buildClient(), new BasicParserPool());
 		soapClient.send(sloUri, soapContext);
- 
+
 		Envelope soapResponse = (Envelope)soapContext.getInboundMessage();
 		// TODO validate response
 	}
