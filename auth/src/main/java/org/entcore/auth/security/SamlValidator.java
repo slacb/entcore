@@ -82,6 +82,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.vertx.java.busmods.BusModBase;
@@ -115,6 +118,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 	private Neo4j neo4j;
 	private SamlServiceProviderFactory spFactory;
 	private IDPAssertionStore idpAssertionsStore;
+	private HttpClient httpClient;
 
 	private void debug(String message) {
 		if (logger.isDebugEnabled()) {
@@ -139,6 +143,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		if (node != null) {
 			MongoDb.getInstance().init(eb, node + config.getString("mongo-address", "wse.mongodb.persistor"));
 			idpAssertionsStore = new MongoDBIDPAssertionStore();
+			httpClient = vertx.createHttpClient(new HttpClientOptions().setKeepAlive(false));
 		}
 
 		try {
@@ -1098,8 +1103,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		}
 		logoutRequest.setSignature(signature);
 
-		String lr = SamlUtils.marshallLogoutRequest(logoutRequest);
-		logger.info(lr);
+		SamlUtils.marshallLogoutRequest(logoutRequest);
 
 		if (signature != null) {
 			Signer.signObject(signature);
@@ -1112,17 +1116,26 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 
 		final String envlop = SamlUtils.marshallEnvelope(envelope);
 
-		logger.info(envlop);
+		HttpClientRequest req = httpClient.postAbs(sloUri, resp -> {
+			if (resp.statusCode() != 200) {
+				resp.bodyHandler(buff -> {
+					logger.error("Slo error : " + envlop + " - " + buff.toString());
+				});
+			}
+		});
 
-		// TODO replace by vertx http client
-		BasicSOAPMessageContext soapContext = new BasicSOAPMessageContext();
-		soapContext.setOutboundMessage(envelope);
-		HttpClientBuilder clientBuilder = new HttpClientBuilder();
-		HttpSOAPClient soapClient = new HttpSOAPClient(clientBuilder.buildClient(), new BasicParserPool());
-		soapClient.send(sloUri, soapContext);
+		req.putHeader("Content-Type", "text/xml");
+		req.end(envlop);
 
-		Envelope soapResponse = (Envelope)soapContext.getInboundMessage();
-		// TODO validate response
+		// // TODO replace by vertx http client
+		// BasicSOAPMessageContext soapContext = new BasicSOAPMessageContext();
+		// soapContext.setOutboundMessage(envelope);
+		// HttpClientBuilder clientBuilder = new HttpClientBuilder();
+		// HttpSOAPClient soapClient = new HttpSOAPClient(clientBuilder.buildClient(), new BasicParserPool());
+		// soapClient.send(sloUri, soapContext);
+
+		// Envelope soapResponse = (Envelope)soapContext.getInboundMessage();
+		// // TODO validate response
 	}
 
 }
