@@ -175,7 +175,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		final String action = message.body().getString("action", "");
 		final String response = message.body().getString("response");
 		final String idp = message.body().getString("IDP");
-		if (!"generate-slo-request".equals(action) && !"generate-authn-request".equals(action)
+		if (!"soap-slo".equals(action) && !"generate-slo-request".equals(action) && !"generate-authn-request".equals(action)
 				&& !"generate-saml-response".equals(action) && (response == null || response.trim().isEmpty())) {
 			sendError(message, "invalid.response");
 			return;
