@@ -894,8 +894,20 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		String sloServiceURI = null;
 		EntityDescriptor entityDescriptor = entityDescriptorMap.get(idp);
 		if (entityDescriptor != null) {
-			for (SingleLogoutService sls : entityDescriptor.getIDPSSODescriptor(SAMLConstants.SAML20P_NS)
-					.getSingleLogoutServices()) {
+			IDPSSODescriptor idpSSODescriptor = entityDescriptor.getIDPSSODescriptor(SAMLConstants.SAML20P_NS);
+			List<SingleLogoutService> sLogoutServices;
+			if (idpSSODescriptor != null) {
+				sLogoutServices = idpSSODescriptor.getSingleLogoutServices();
+			} else {
+				SPSSODescriptor spSSODescriptor = entityDescriptor.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
+				if (spSSODescriptor != null) {
+					sLogoutServices = spSSODescriptor.getSingleLogoutServices();
+				} else {
+					logger.error("Not found IDP or SP SSO Descriptor");
+					return "";
+				}
+			}
+			for (SingleLogoutService sls : sLogoutServices) {
 				if (sls.getBinding().equals(sloBinding)) {
 					sloServiceURI = sls.getLocation();
 					break;
