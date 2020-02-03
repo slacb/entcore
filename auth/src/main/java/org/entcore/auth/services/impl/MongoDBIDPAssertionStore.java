@@ -38,6 +38,7 @@ public class MongoDBIDPAssertionStore implements IDPAssertionStore {
 	public void store(Assertion assertion, Handler<AsyncResult<Void>> handler) {
         final NameID nameID = assertion.getSubject().getNameID();
         final JsonObject a = new JsonObject()
+            .put("created", MongoDb.now())
             .put("nameId", nameID.getValue())
             .put("sessionIndex", assertion.getID())
             .put("idp", nameID.getNameQualifier())
@@ -58,6 +59,17 @@ public class MongoDBIDPAssertionStore implements IDPAssertionStore {
             final JsonArray a = r.body().getJsonArray("results");
             if ("ok".equals(r.body().getString("status")) && a != null) {
                 handler.handle(Future.succeededFuture(a));
+            } else {
+                handler.handle(Future.failedFuture(r.body().getString("message")));
+            }
+        });
+    }
+
+    public void delete(String id, Handler<AsyncResult<Void>> handler) {
+        final JsonObject query = new JsonObject().put("_id", id);
+        mongoDb.delete(IDP_ASSERTIONS_COLLECTION, query, r -> {
+            if ("ok".equals(r.body().getString("status"))) {
+                handler.handle(Future.succeededFuture());
             } else {
                 handler.handle(Future.failedFuture(r.body().getString("message")));
             }

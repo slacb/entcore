@@ -1121,6 +1121,12 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 				resp.bodyHandler(buff -> {
 					logger.error("Slo error : " + envlop + " - " + buff.toString());
 				});
+			} else {
+				idpAssertionsStore.delete(responseAssertionInfos.getString("_id"), ar -> {
+					if (ar.failed()) {
+						logger.error("Error deleting old idp assertion.", ar.cause());
+					}
+				});
 			}
 		});
 

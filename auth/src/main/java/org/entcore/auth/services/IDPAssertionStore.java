@@ -31,4 +31,6 @@ public interface IDPAssertionStore {
 
 	public void retrieve(String nameId, Handler<AsyncResult<JsonArray>> handler); // TODO replace handler by Handler<AsyncResult<List<Assertion>>>
 
+	public void delete(String id, Handler<AsyncResult<Void>> handler);
+
 }
