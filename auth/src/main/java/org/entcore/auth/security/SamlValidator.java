@@ -45,16 +45,11 @@ import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.security.MetadataCredentialResolver;
 import org.opensaml.security.MetadataCriteria;
 import org.opensaml.security.SAMLSignatureProfileValidator;
-import org.opensaml.ws.soap.client.BasicSOAPMessageContext;
-import org.opensaml.ws.soap.client.http.HttpClientBuilder;
-import org.opensaml.ws.soap.client.http.HttpSOAPClient;
 import org.opensaml.ws.soap.soap11.Body;
 import org.opensaml.ws.soap.soap11.Envelope;
 import org.opensaml.xml.Configuration;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.encryption.InlineEncryptedKeyResolver;
-import org.opensaml.xml.io.Marshaller;
-import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.parse.BasicParserPool;
 import org.opensaml.xml.schema.XSString;
@@ -1044,11 +1039,9 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 	}
 
 	private void soapSlo(String sessionId, Handler<AsyncResult<Void>> handler) {
-		logger.info("enter soap slo");
 		idpAssertionsStore.retrieve(sessionId, ar -> {
 			if (ar.succeeded()) {
 				final JsonArray a = ar.result();
-				logger.info("retrieve assertions : " + a.encode());
 				final AtomicBoolean error = new AtomicBoolean(false);
 				for (Object o : a) {
 					if (!(o instanceof JsonObject))
@@ -1117,8 +1110,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		final String envlop = SamlUtils.marshallEnvelope(envelope);
 
 		HttpClientRequest req = httpClient.postAbs(sloUri, resp -> {
-			logger.info("slo response code : " + resp.statusCode());
-			if (resp.statusCode() != 200) {
+			if (resp.statusCode() != 200 && resp.statusCode() != 302) {
 				resp.bodyHandler(buff -> {
 					logger.error("Slo error : " + envlop + " - " + buff.toString());
 				});
@@ -1133,16 +1125,6 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 
 		req.putHeader("Content-Type", "text/xml");
 		req.end(envlop);
-
-		// // TODO replace by vertx http client
-		// BasicSOAPMessageContext soapContext = new BasicSOAPMessageContext();
-		// soapContext.setOutboundMessage(envelope);
-		// HttpClientBuilder clientBuilder = new HttpClientBuilder();
-		// HttpSOAPClient soapClient = new HttpSOAPClient(clientBuilder.buildClient(), new BasicParserPool());
-		// soapClient.send(sloUri, soapContext);
-
-		// Envelope soapResponse = (Envelope)soapContext.getInboundMessage();
-		// // TODO validate response
 	}
 
 }
