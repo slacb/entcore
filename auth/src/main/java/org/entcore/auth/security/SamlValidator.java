@@ -1117,6 +1117,7 @@ public class SamlValidator extends BusModBase implements Handler<Message<JsonObj
 		final String envlop = SamlUtils.marshallEnvelope(envelope);
 
 		HttpClientRequest req = httpClient.postAbs(sloUri, resp -> {
+			logger.info("slo response code : " + resp.statusCode());
 			if (resp.statusCode() != 200) {
 				resp.bodyHandler(buff -> {
 					logger.error("Slo error : " + envlop + " - " + buff.toString());
