@@ -129,10 +129,21 @@ public abstract class BaseServer extends Server {
 	}
 
 	protected void initFilters() {
+		//prepare cache if needed
+		Optional<Integer> oauthTtl = Optional.empty();
+		Optional<CacheService> cacheService = Optional.empty();
+		final LocalMap<Object, Object> server = vertx.sharedData().getLocalMap("server");
+		final Object redisConfig = server.get("redisConfig");
+		if(redisConfig != null){
+			final JsonObject redisConfigJson = new JsonObject((String)redisConfig);
+			oauthTtl = Optional.ofNullable(redisConfigJson.getInteger("oauthTtlSeconds"));
+			cacheService = Optional.ofNullable(new RedisCacheService(vertx, redisConfigJson));
+		}
+		//
 		clearFilters();
 		addFilter(new AccessLoggerFilter(accessLogger));
 		addFilter(new UserAuthFilter(new AppOAuthResourceProvider(
-				getEventBus(vertx), getPathPrefix(config)), new BasicFilter()));
+				getEventBus(vertx), getPathPrefix(config), cacheService, oauthTtl), new BasicFilter()));
 		addFilter(new TraceFilter(getEventBus(vertx), securedUriBinding));
 	}
 
